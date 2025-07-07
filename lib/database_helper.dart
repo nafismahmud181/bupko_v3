@@ -223,4 +223,15 @@ class DatabaseHelper {
     }
     return result;
   }
+
+  Future<List<Book>> searchBooks(String query, {int limit = 50}) async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.rawQuery('''
+      SELECT * FROM books
+      WHERE LOWER(title) LIKE ? OR LOWER(author_name) LIKE ?
+      ORDER BY title COLLATE NOCASE
+      LIMIT ?
+    ''', ['%${query.toLowerCase()}%', '%${query.toLowerCase()}%', limit]);
+    return maps.map((map) => Book.fromMap(map)).toList();
+  }
 } 
