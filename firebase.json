@@ -1,11 +1,1 @@
-{
-  "firestore": {
-    "database": "(default)",
-    "location": "nam5",
-    "rules": "firestore.rules",
-    "indexes": "firestore.indexes.json"
-  },
-  "storage": {
-    "rules": "storage.rules"
-  }
-}
+{"flutter":{"platforms":{"android":{"default":{"projectId":"bupko-v3","appId":"1:378274399833:android:ac657b52f6d6799a9dd348","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"bupko-v3","configurations":{"android":"1:378274399833:android:ac657b52f6d6799a9dd348"}}}}}}
