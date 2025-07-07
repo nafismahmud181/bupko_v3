@@ -46,3 +46,4 @@ app.*.map.json
 
 
 assets/database/
+google-services.json
