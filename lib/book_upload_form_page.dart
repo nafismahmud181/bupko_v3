@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'database_helper.dart';
 
 class BookUploadFormPage extends StatefulWidget {
   const BookUploadFormPage({super.key});
@@ -22,16 +23,32 @@ class _BookUploadFormPageState extends State<BookUploadFormPage> {
   final TextEditingController _pdfUrlController = TextEditingController();
   final TextEditingController _txtUrlController = TextEditingController();
 
-  String? _selectedCategory;
+  Category? _selectedCategory;
   String? _selectedLanguage;
 
-  // Dummy data for dropdowns (replace with real data later)
-  final List<String> _categories = [
-    'Fiction', 'Non-fiction', 'Science', 'History', 'Biography', 'Other'
-  ];
+  List<Category> _categories = [];
+  bool _loadingCategories = true;
+
   final List<String> _languages = [
     'English', 'Spanish', 'French', 'German', 'Other'
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchCategories();
+  }
+
+  Future<void> _fetchCategories() async {
+    setState(() {
+      _loadingCategories = true;
+    });
+    final categories = await DatabaseHelper().getAllCategories();
+    setState(() {
+      _categories = categories;
+      _loadingCategories = false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -72,19 +89,21 @@ class _BookUploadFormPageState extends State<BookUploadFormPage> {
                 validator: (value) => value == null || value.isEmpty ? 'Please enter the author name' : null,
               ),
               const SizedBox(height: 16),
-              DropdownButtonFormField<String>(
-                value: _selectedCategory,
-                items: _categories.map((cat) => DropdownMenuItem(
-                  value: cat,
-                  child: Text(cat),
-                )).toList(),
-                onChanged: (val) => setState(() => _selectedCategory = val),
-                decoration: const InputDecoration(
-                  labelText: 'Category',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) => value == null ? 'Please select a category' : null,
-              ),
+              _loadingCategories
+                  ? const Center(child: CircularProgressIndicator())
+                  : DropdownButtonFormField<Category>(
+                      value: _selectedCategory,
+                      items: _categories.map((cat) => DropdownMenuItem(
+                        value: cat,
+                        child: Text(cat.name),
+                      )).toList(),
+                      onChanged: (val) => setState(() => _selectedCategory = val),
+                      decoration: const InputDecoration(
+                        labelText: 'Category',
+                        border: OutlineInputBorder(),
+                      ),
+                      validator: (value) => value == null ? 'Please select a category' : null,
+                    ),
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
                 value: _selectedLanguage,

@@ -234,4 +234,10 @@ class DatabaseHelper {
     ''', ['%${query.toLowerCase()}%', '%${query.toLowerCase()}%', limit]);
     return maps.map((map) => Book.fromMap(map)).toList();
   }
+
+  Future<List<Category>> getAllCategories() async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.query('categories');
+    return maps.map((map) => Category.fromMap(map)).toList();
+  }
 } 
