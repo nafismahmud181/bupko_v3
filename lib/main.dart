@@ -39,7 +39,7 @@ class _HomePageState extends State<HomePage> {
 
   void _loadBooks() {
     setState(() {
-      _booksFuture = DatabaseHelper().getBooksGroupedByCategory(maxBooksPerCategory: 5);
+      _booksFuture = DatabaseHelper().getCategoriesWithBooks(maxBooksPerCategory: 5);
     });
   }
 
@@ -179,9 +179,9 @@ class BookCard extends StatelessWidget {
               borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
               child: AspectRatio(
                 aspectRatio: 2 / 3,
-                child: book.coverImageUrl.isNotEmpty
+                child: book.coverImageUrl != null && book.coverImageUrl!.isNotEmpty
                     ? Image.network(
-                        book.coverImageUrl,
+                        book.coverImageUrl!,
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) {
                           return Container(
@@ -231,7 +231,7 @@ class BookCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      book.authorName,
+                      book.authorName ?? '',
                       style: TextStyle(
                         fontSize: 11,
                         color: Colors.grey[600],

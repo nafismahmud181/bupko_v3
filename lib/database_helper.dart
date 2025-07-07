@@ -6,29 +6,104 @@ import 'package:sqflite/sqflite.dart';
 
 class Book {
   final int id;
+  final int? gutenbergId;
   final String title;
-  final String authorName;
-  final String coverImageUrl;
-  final String readOnlineUrl;
-  final int categoryId;
+  final String? subtitle;
+  final int? authorId;
+  final String? authorName;
+  final int? categoryId;
+  final int? languageId;
+  final String? languageCode;
+  final int? publicationYear;
+  final int? pages;
+  final int? wordCount;
+  final String? description;
+  final String? tags;
+  final double? rating;
+  final int? ratingCount;
+  final String? difficultyLevel;
+  final int? readingTimeMinutes;
+  final bool? isPopular;
+  final bool? isFeatured;
+  final String? bookPageUrl;
+  final String? coverImageUrl;
+  final String? readOnlineUrl;
+  final String? epubDownloadUrl;
+  final String? pdfDownloadUrl;
+  final String? txtDownloadUrl;
+  final double? epubSizeMb;
+  final double? pdfSizeMb;
+  final double? txtSizeMb;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
 
   Book({
     required this.id,
+    this.gutenbergId,
     required this.title,
-    required this.authorName,
-    required this.coverImageUrl,
-    required this.readOnlineUrl,
-    required this.categoryId,
+    this.subtitle,
+    this.authorId,
+    this.authorName,
+    this.categoryId,
+    this.languageId,
+    this.languageCode,
+    this.publicationYear,
+    this.pages,
+    this.wordCount,
+    this.description,
+    this.tags,
+    this.rating,
+    this.ratingCount,
+    this.difficultyLevel,
+    this.readingTimeMinutes,
+    this.isPopular,
+    this.isFeatured,
+    this.bookPageUrl,
+    this.coverImageUrl,
+    this.readOnlineUrl,
+    this.epubDownloadUrl,
+    this.pdfDownloadUrl,
+    this.txtDownloadUrl,
+    this.epubSizeMb,
+    this.pdfSizeMb,
+    this.txtSizeMb,
+    this.createdAt,
+    this.updatedAt,
   });
 
   factory Book.fromMap(Map<String, dynamic> map) {
     return Book(
       id: map['id'],
+      gutenbergId: map['gutenberg_id'],
       title: map['title'],
+      subtitle: map['subtitle'],
+      authorId: map['author_id'],
       authorName: map['author_name'],
+      categoryId: map['category_id'],
+      languageId: map['language_id'],
+      languageCode: map['language_code'],
+      publicationYear: map['publication_year'],
+      pages: map['pages'],
+      wordCount: map['word_count'],
+      description: map['description'],
+      tags: map['tags'],
+      rating: map['rating'] != null ? (map['rating'] as num).toDouble() : null,
+      ratingCount: map['rating_count'],
+      difficultyLevel: map['difficulty_level'],
+      readingTimeMinutes: map['reading_time_minutes'],
+      isPopular: map['is_popular'] == 1 || map['is_popular'] == true,
+      isFeatured: map['is_featured'] == 1 || map['is_featured'] == true,
+      bookPageUrl: map['book_page_url'],
       coverImageUrl: map['cover_image_url'],
       readOnlineUrl: map['read_online_url'],
-      categoryId: map['category_id'],
+      epubDownloadUrl: map['epub_download_url'],
+      pdfDownloadUrl: map['pdf_download_url'],
+      txtDownloadUrl: map['txt_download_url'],
+      epubSizeMb: map['epub_size_mb'] != null ? (map['epub_size_mb'] as num).toDouble() : null,
+      pdfSizeMb: map['pdf_size_mb'] != null ? (map['pdf_size_mb'] as num).toDouble() : null,
+      txtSizeMb: map['txt_size_mb'] != null ? (map['txt_size_mb'] as num).toDouble() : null,
+      createdAt: map['created_at'] != null ? DateTime.tryParse(map['created_at']) : null,
+      updatedAt: map['updated_at'] != null ? DateTime.tryParse(map['updated_at']) : null,
     );
   }
 }
@@ -36,16 +111,25 @@ class Book {
 class Category {
   final int id;
   final String name;
+  final String? description;
+  final int? bookCount;
+  final DateTime? createdAt;
 
   Category({
     required this.id,
     required this.name,
+    this.description,
+    this.bookCount,
+    this.createdAt,
   });
 
   factory Category.fromMap(Map<String, dynamic> map) {
     return Category(
       id: map['id'],
       name: map['name'],
+      description: map['description'],
+      bookCount: map['book_count'],
+      createdAt: map['created_at'] != null ? DateTime.tryParse(map['created_at']) : null,
     );
   }
 }
@@ -117,44 +201,26 @@ class DatabaseHelper {
     await _initDatabase();
   }
 
-  Future<List<CategoryWithBooks>> getBooksGroupedByCategory({int maxBooksPerCategory = 5}) async {
+  Future<List<Book>> getBooksForCategory(int categoryId, {int limit = 5}) async {
     final db = await database;
-    
-    // Get all categories
-    List<Map<String, dynamic>> categoryMaps = await db.query('categories');
-    List<Category> categories = categoryMaps.map((map) => Category.fromMap(map)).toList();
-    
+    final List<Map<String, dynamic>> maps = await db.rawQuery('''
+      SELECT books.* FROM books
+      INNER JOIN book_categories ON books.id = book_categories.book_id
+      WHERE book_categories.category_id = ?
+      LIMIT ?
+    ''', [categoryId, limit]);
+    return maps.map((map) => Book.fromMap(map)).toList();
+  }
+
+  Future<List<CategoryWithBooks>> getCategoriesWithBooks({int maxBooksPerCategory = 5}) async {
+    final db = await database;
+    final List<Map<String, dynamic>> categoryMaps = await db.query('categories');
     List<CategoryWithBooks> result = [];
-    
-    for (Category category in categories) {
-      // Get books for this category (limited to maxBooksPerCategory)
-      List<Map<String, dynamic>> bookMaps = await db.query(
-        'books',
-        where: 'category_id = ?',
-        whereArgs: [category.id],
-        limit: maxBooksPerCategory,
-      );
-      
-      List<Book> books = bookMaps.map((map) => Book.fromMap(map)).toList();
-      
-      result.add(CategoryWithBooks(
-        category: category,
-        books: books,
-      ));
+    for (final catMap in categoryMaps) {
+      final category = Category.fromMap(catMap);
+      final books = await getBooksForCategory(category.id, limit: maxBooksPerCategory);
+      result.add(CategoryWithBooks(category: category, books: books));
     }
-    
     return result;
-  }
-
-  Future<List<Book>> getAllBooks() async {
-    final db = await database;
-    List<Map<String, dynamic>> maps = await db.query('books');
-    return List.generate(maps.length, (i) => Book.fromMap(maps[i]));
-  }
-
-  Future<List<Category>> getAllCategories() async {
-    final db = await database;
-    List<Map<String, dynamic>> maps = await db.query('categories');
-    return List.generate(maps.length, (i) => Category.fromMap(maps[i]));
   }
 } 
