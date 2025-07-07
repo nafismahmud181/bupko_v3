@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'database_helper.dart';
 import 'search_page.dart';
 import 'book_upload_form_page.dart';
+import 'book_details_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -148,7 +149,17 @@ class CategorySection extends StatelessWidget {
             itemCount: categoryWithBooks.books.length,
             itemBuilder: (context, index) {
               final book = categoryWithBooks.books[index];
-              return BookCard(book: book);
+              return GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => BookDetailsPage(book: book),
+                    ),
+                  );
+                },
+                child: BookCard(book: book),
+              );
             },
           ),
         ),
