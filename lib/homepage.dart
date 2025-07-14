@@ -44,30 +44,127 @@ class _HomePageState extends State<HomePage> {
     
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
-      appBar: _buildModernAppBar(context),
       drawer: _buildModernDrawer(context, user),
-      body: RefreshIndicator(
-        onRefresh: _refreshDatabase,
-        child: FutureBuilder<List<CategoryWithBooks>>(
-          future: _booksFuture,
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return _buildLoadingState();
-            }
-            
-            if (snapshot.hasError) {
-              return _buildErrorState(snapshot.error.toString());
-            }
-            
-            if (!snapshot.hasData || snapshot.data!.isEmpty) {
-              return _buildEmptyState();
-            }
-            
-            return _buildBooksList(snapshot.data!);
-          },
-        ),
+      body: Column(
+        children: [
+          buildModernHeader(context),
+          Expanded(
+            child: RefreshIndicator(
+              onRefresh: _refreshDatabase,
+              child: FutureBuilder<List<CategoryWithBooks>>(
+                future: _booksFuture,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return _buildLoadingState();
+                  }
+                  
+                  if (snapshot.hasError) {
+                    return _buildErrorState(snapshot.error.toString());
+                  }
+                  
+                  if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                    return _buildEmptyState();
+                  }
+                  
+                  return _buildBooksList(snapshot.data!);
+                },
+              ),
+            ),
+          ),
+        ],
       ),
       floatingActionButton: _buildFloatingActionButton(context),
+    );
+  }
+
+  Widget buildModernHeader(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 32, 16, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header Row
+          Container(
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surface,
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.04),
+                  blurRadius: 12,
+                  offset: Offset(0, 4),
+                ),
+              ],
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+            child: Row(
+              children: [
+                Icon(Icons.menu_book_rounded, color: theme.colorScheme.primary, size: 32),
+                const SizedBox(width: 10),
+                Text(
+                  'Bupko',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 22,
+                    color: theme.colorScheme.onSurface,
+                  ),
+                ),
+                Spacer(),
+                Stack(
+                  children: [
+                    Icon(Icons.notifications_none_rounded, size: 28, color: theme.colorScheme.onSurface),
+                    Positioned(
+                      right: 0,
+                      top: 2,
+                      child: Container(
+                        width: 10,
+                        height: 10,
+                        decoration: BoxDecoration(
+                          color: Colors.red,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: theme.colorScheme.surface, width: 1.5),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 18),
+          // Search Bar
+          GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SearchPage()),
+              );
+            },
+            child: Container(
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              child: Row(
+                children: [
+                  Icon(Icons.search_rounded, color: theme.colorScheme.onSurface.withOpacity(0.5)),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Search...',
+                    style: TextStyle(
+                      color: theme.colorScheme.onSurface.withOpacity(0.5),
+                      fontSize: 16,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+        ],
+      ),
     );
   }
 
