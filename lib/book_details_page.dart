@@ -17,11 +17,69 @@ class _BookDetailsPageState extends widgets.State<BookDetailsPage> with widgets.
   late widgets.TabController _tabController;
   bool _downloading = false;
   double _downloadProgress = 0.0;
+  bool _isBookDownloaded = false;
+  String? _localFilePath;
 
   @override
   void initState() {
     super.initState();
     _tabController = widgets.TabController(length: 3, vsync: this);
+    _checkIfBookExists();
+  }
+
+  Future<void> _checkIfBookExists() async {
+    final book = widget.book;
+    String? url = book.epubDownloadUrl ?? book.pdfDownloadUrl ?? book.txtDownloadUrl;
+    String? ext;
+    if (book.epubDownloadUrl != null) ext = 'epub';
+    else if (book.pdfDownloadUrl != null) ext = 'pdf';
+    else if (book.txtDownloadUrl != null) ext = 'txt';
+    
+    if (url != null && ext != null) {
+      final dir = await getApplicationDocumentsDirectory();
+      final savePath = '${dir.path}/${book.title.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_')}.${ext ?? 'file'}';
+      final file = File(savePath);
+      print('Checking if book exists: $savePath');
+      print('Book title: ${book.title}');
+      print('Extension: $ext');
+      if (await file.exists()) {
+        print('Book exists! Setting _isBookDownloaded to true');
+        setState(() {
+          _isBookDownloaded = true;
+          _localFilePath = savePath;
+        });
+      } else {
+        print('Book does not exist');
+      }
+    } else {
+      print('No download URL or extension found');
+    }
+  }
+
+  Future<void> _openBook() async {
+    if (_localFilePath != null) {
+      final book = widget.book;
+      String? ext;
+      if (book.epubDownloadUrl != null) ext = 'epub';
+      else if (book.pdfDownloadUrl != null) ext = 'pdf';
+      else if (book.txtDownloadUrl != null) ext = 'txt';
+      
+      if (ext == 'epub') {
+        widgets.Navigator.push(
+          context,
+          widgets.MaterialPageRoute(
+            builder: (context) => EpubReaderScreen(
+              filePath: _localFilePath!,
+              bookTitle: book.title,
+            ),
+          ),
+        );
+      } else {
+        widgets.ScaffoldMessenger.of(context).showSnackBar(
+          widgets.SnackBar(content: widgets.Text('Opening $ext file...')),
+        );
+      }
+    }
   }
 
   @override
@@ -45,15 +103,36 @@ class _BookDetailsPageState extends widgets.State<BookDetailsPage> with widgets.
       return;
     }
     
+    final dir = await getApplicationDocumentsDirectory();
+    final savePath = '${dir.path}/${book.title.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_')}.${ext ?? 'file'}';
+    final file = File(savePath);
+    if (await file.exists()) {
+      // File already exists, open directly
+      if (ext == 'epub') {
+        widgets.Navigator.push(
+          context,
+          widgets.MaterialPageRoute(
+            builder: (context) => EpubReaderScreen(
+              filePath: savePath,
+              bookTitle: book.title,
+            ),
+          ),
+        );
+        return;
+      }
+      // You can add logic for PDF/TXT if needed
+      widgets.ScaffoldMessenger.of(context).showSnackBar(
+        widgets.SnackBar(content: widgets.Text('Book already downloaded.')),
+      );
+      return;
+    }
+    
     setState(() {
       _downloading = true;
       _downloadProgress = 0.0;
     });
     
     try {
-      final dir = await getApplicationDocumentsDirectory();
-      final savePath = '${dir.path}/${book.title.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_')}.${ext ?? 'file'}';
-      
       await Dio().download(
         url,
         savePath,
@@ -68,6 +147,8 @@ class _BookDetailsPageState extends widgets.State<BookDetailsPage> with widgets.
       
       setState(() {
         _downloading = false;
+        _isBookDownloaded = true;
+        _localFilePath = savePath;
       });
       
       widgets.ScaffoldMessenger.of(context).showSnackBar(
@@ -77,7 +158,6 @@ class _BookDetailsPageState extends widgets.State<BookDetailsPage> with widgets.
       // Open EPUB with epub_view
       if (ext == 'epub') {
         try {
-          final file = File(savePath);
           if (await file.exists()) {
             widgets.Navigator.push(
               context,
@@ -262,7 +342,7 @@ class _BookDetailsPageState extends widgets.State<BookDetailsPage> with widgets.
                 const widgets.SizedBox(width: 16),
                 widgets.Expanded(
                   child: widgets.ElevatedButton(
-                    onPressed: _downloading ? null : _downloadBook,
+                    onPressed: _downloading ? null : (_isBookDownloaded ? _openBook : _downloadBook),
                     style: widgets.ElevatedButton.styleFrom(
                       backgroundColor: colorScheme.primary,
                       foregroundColor: colorScheme.onPrimary,
@@ -279,7 +359,7 @@ class _BookDetailsPageState extends widgets.State<BookDetailsPage> with widgets.
                               color: colorScheme.onPrimary,
                             ),
                           )
-                        : const widgets.Text('Download', style: widgets.TextStyle(fontSize: 16)),
+                        : widgets.Text(_isBookDownloaded ? 'Read' : 'Download', style: const widgets.TextStyle(fontSize: 16)),
                   ),
                 ),
               ],
