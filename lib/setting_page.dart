@@ -212,13 +212,14 @@ class _SettingPageState extends State<SettingPage> with TickerProviderStateMixin
   }
 
   Widget _buildAppearanceSection(ThemeData theme, bool isDark) {
+    ThemeMode currentMode = themeModeNotifier.value;
     return Container(
       decoration: BoxDecoration(
         color: isDark ? Colors.grey[800] : Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: Colors.black.withOpacity(0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -228,23 +229,126 @@ class _SettingPageState extends State<SettingPage> with TickerProviderStateMixin
         children: [
           _buildSettingTile(
             icon: Icons.dark_mode,
-            title: 'Dark Mode',
-            subtitle: 'Switch between light and dark themes',
-            trailing: ValueListenableBuilder<ThemeMode>(
-              valueListenable: themeModeNotifier,
-              builder: (context, mode, _) {
-                return Switch.adaptive(
-                  value: mode == ThemeMode.dark,
-                  onChanged: (val) {
-                    themeModeNotifier.value = val ? ThemeMode.dark : ThemeMode.light;
-                  },
-                  activeColor: theme.colorScheme.primary,
-                );
-              },
-            ),
+            title: 'Theme',
+            subtitle: 'Choose your preferred theme',
+            trailing: _buildCustomThemeDropdown(currentMode, theme, isDark),
             theme: theme,
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildCustomThemeDropdown(ThemeMode currentMode, ThemeData theme, bool isDark) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.grey[700] : Colors.grey[100],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: theme.colorScheme.primary.withOpacity(0.2),
+          width: 1,
+        ),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<ThemeMode>(
+          value: currentMode,
+          onChanged: (ThemeMode? newMode) {
+            if (newMode != null) {
+              setState(() {
+                themeModeNotifier.value = newMode;
+              });
+            }
+          },
+          icon: Icon(
+            Icons.keyboard_arrow_down,
+            color: theme.colorScheme.primary,
+            size: 20,
+          ),
+          style: TextStyle(
+            color: theme.colorScheme.onSurface,
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+          ),
+          dropdownColor: isDark ? Colors.grey[800] : Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          elevation: 8,
+          items: [
+            DropdownMenuItem(
+              value: ThemeMode.light,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 20,
+                    height: 20,
+                    decoration: BoxDecoration(
+                      color: Colors.orange.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(
+                      Icons.light_mode,
+                      color: Colors.orange,
+                      size: 14,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  const Text('Light'),
+                ],
+              ),
+            ),
+            DropdownMenuItem(
+              value: ThemeMode.dark,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 20,
+                    height: 20,
+                    decoration: BoxDecoration(
+                      color: Colors.indigo.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(
+                      Icons.dark_mode,
+                      color: Colors.indigo,
+                      size: 14,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  const Text('Dark'),
+                ],
+              ),
+            ),
+            DropdownMenuItem(
+              value: ThemeMode.system,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 20,
+                    height: 20,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Colors.orange.withOpacity(0.3), Colors.indigo.withOpacity(0.3)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(
+                      Icons.auto_awesome,
+                      color: theme.colorScheme.primary,
+                      size: 14,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  const Text('System'),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
