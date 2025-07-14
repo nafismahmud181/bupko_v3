@@ -1,33 +1,21 @@
 import 'package:flutter/material.dart';
 import 'database_helper.dart';
-import 'category_books_page.dart';
+import 'book_details_page.dart';
 
-class CategoryPage extends StatefulWidget {
-  const CategoryPage({super.key});
-
-  @override
-  State<CategoryPage> createState() => _CategoryPageState();
-}
-
-class _CategoryPageState extends State<CategoryPage> {
-  late Future<List<Category>> _categoriesFuture;
-
-  @override
-  void initState() {
-    super.initState();
-    _categoriesFuture = DatabaseHelper().getAllCategories();
-  }
+class CategoryBooksPage extends StatelessWidget {
+  final Category category;
+  const CategoryBooksPage({super.key, required this.category});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: const Text(
-          'Categories',
-          style: TextStyle(
+        title: Text(
+          category.name,
+          style: const TextStyle(
             fontWeight: FontWeight.w600,
-            fontSize: 24,
+            fontSize: 20,
           ),
         ),
         backgroundColor: Colors.white,
@@ -41,8 +29,8 @@ class _CategoryPageState extends State<CategoryPage> {
           ),
         ),
       ),
-      body: FutureBuilder<List<Category>>(
-        future: _categoriesFuture,
+      body: FutureBuilder<List<Book>>(
+        future: DatabaseHelper().getBooksForCategory(category.id, limit: 100),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(
@@ -74,20 +62,20 @@ class _CategoryPageState extends State<CategoryPage> {
               ),
             );
           }
-          final categories = snapshot.data ?? [];
-          if (categories.isEmpty) {
+          final books = snapshot.data ?? [];
+          if (books.isEmpty) {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(
-                    Icons.category_outlined,
+                    Icons.book_outlined,
                     size: 64,
                     color: Colors.grey[400],
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'No categories found',
+                    'No books found',
                     style: TextStyle(
                       color: Colors.grey[600],
                       fontSize: 18,
@@ -96,7 +84,7 @@ class _CategoryPageState extends State<CategoryPage> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Categories will appear here when added',
+                    'Books in this category will appear here',
                     style: TextStyle(
                       color: Colors.grey[500],
                       fontSize: 14,
@@ -106,33 +94,26 @@ class _CategoryPageState extends State<CategoryPage> {
               ),
             );
           }
-          return RefreshIndicator(
-            onRefresh: () async {
-              setState(() {
-                _categoriesFuture = DatabaseHelper().getAllCategories();
-              });
+          return ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: books.length,
+            itemBuilder: (context, index) {
+              final book = books[index];
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: _BookCard(
+                  book: book,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => BookDetailsPage(book: book),
+                      ),
+                    );
+                  },
+                ),
+              );
             },
-            child: ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: categories.length,
-              itemBuilder: (context, index) {
-                final category = categories[index];
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: _CategoryCard(
-                    category: category,
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => CategoryBooksPage(category: category),
-                        ),
-                      );
-                    },
-                  ),
-                );
-              },
-            ),
           );
         },
       ),
@@ -140,12 +121,12 @@ class _CategoryPageState extends State<CategoryPage> {
   }
 }
 
-class _CategoryCard extends StatelessWidget {
-  final Category category;
+class _BookCard extends StatelessWidget {
+  final Book book;
   final VoidCallback onTap;
 
-  const _CategoryCard({
-    required this.category,
+  const _BookCard({
+    required this.book,
     required this.onTap,
   });
 
@@ -169,20 +150,41 @@ class _CategoryCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           onTap: onTap,
           child: Padding(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(16),
             child: Row(
               children: [
                 Container(
-                  width: 48,
-                  height: 48,
+                  width: 60,
+                  height: 80,
                   decoration: BoxDecoration(
-                    color: _getCategoryColor(category.name),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(8),
+                    color: Colors.grey[200],
                   ),
-                  child: Icon(
-                    _getCategoryIcon(category.name),
-                    color: Colors.white,
-                    size: 24,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: book.coverImageUrl != null && book.coverImageUrl!.isNotEmpty
+                        ? Image.network(
+                            book.coverImageUrl!,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                color: Colors.grey[300],
+                                child: Icon(
+                                  Icons.book,
+                                  size: 32,
+                                  color: Colors.grey[600],
+                                ),
+                              );
+                            },
+                          )
+                        : Container(
+                            color: Colors.grey[300],
+                            child: Icon(
+                              Icons.book,
+                              size: 32,
+                              color: Colors.grey[600],
+                            ),
+                          ),
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -191,26 +193,25 @@ class _CategoryCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        category.name,
+                        book.title,
                         style: const TextStyle(
-                          fontSize: 18,
+                          fontSize: 16,
                           fontWeight: FontWeight.w600,
                           color: Colors.black87,
                         ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      if (category.description != null && category.description!.isNotEmpty) ...[
-                        const SizedBox(height: 4),
+                      const SizedBox(height: 4),
+                      if (book.authorName != null && book.authorName!.isNotEmpty)
                         Text(
-                          category.description!,
+                          book.authorName!,
                           style: TextStyle(
                             fontSize: 14,
                             color: Colors.grey[600],
-                            height: 1.3,
+                            fontWeight: FontWeight.w500,
                           ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
                         ),
-                      ],
                     ],
                   ),
                 ),
@@ -226,34 +227,5 @@ class _CategoryCard extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  Color _getCategoryColor(String categoryName) {
-    final colors = [
-      Colors.blue,
-      Colors.green,
-      Colors.orange,
-      Colors.purple,
-      Colors.red,
-      Colors.teal,
-      Colors.indigo,
-      Colors.pink,
-    ];
-    return colors[categoryName.hashCode % colors.length];
-  }
-
-  IconData _getCategoryIcon(String categoryName) {
-    final name = categoryName.toLowerCase();
-    if (name.contains('fiction')) return Icons.auto_stories;
-    if (name.contains('science')) return Icons.science;
-    if (name.contains('history')) return Icons.history_edu;
-    if (name.contains('tech')) return Icons.computer;
-    if (name.contains('art')) return Icons.palette;
-    if (name.contains('music')) return Icons.music_note;
-    if (name.contains('cook')) return Icons.restaurant;
-    if (name.contains('travel')) return Icons.travel_explore;
-    if (name.contains('health')) return Icons.health_and_safety;
-    if (name.contains('business')) return Icons.business_center;
-    return Icons.category;
   }
 }
