@@ -219,7 +219,7 @@ class _SettingPageState extends State<SettingPage> with TickerProviderStateMixin
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -252,13 +252,13 @@ class _SettingPageState extends State<SettingPage> with TickerProviderStateMixin
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.07),
+              color: Colors.black.withValues(alpha: 0.07),
               blurRadius: 10,
               offset: const Offset(0, 2),
             ),
           ],
           border: Border.all(
-            color: theme.colorScheme.primary.withOpacity(0.13),
+            color: theme.colorScheme.primary.withValues(alpha: 0.13),
             width: 1.2,
           ),
         ),
@@ -295,7 +295,7 @@ class _SettingPageState extends State<SettingPage> with TickerProviderStateMixin
                       width: 20,
                       height: 20,
                       decoration: BoxDecoration(
-                        color: Colors.orange.withOpacity(0.2),
+                        color: Colors.orange.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: const Icon(
@@ -318,7 +318,7 @@ class _SettingPageState extends State<SettingPage> with TickerProviderStateMixin
                       width: 20,
                       height: 20,
                       decoration: BoxDecoration(
-                        color: Colors.indigo.withOpacity(0.2),
+                        color: Colors.indigo.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: const Icon(
@@ -342,7 +342,7 @@ class _SettingPageState extends State<SettingPage> with TickerProviderStateMixin
                       height: 20,
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
-                          colors: [Colors.orange.withOpacity(0.3), Colors.indigo.withOpacity(0.3)],
+                          colors: [Colors.orange.withValues(alpha: 0.3), Colors.indigo.withValues(alpha: 0.3)],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),

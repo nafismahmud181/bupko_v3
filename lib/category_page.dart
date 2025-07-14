@@ -39,7 +39,7 @@ class _CategoryPageState extends State<CategoryPage> {
           preferredSize: const Size.fromHeight(1),
           child: Container(
             height: 1,
-            color: colorScheme.outline.withOpacity(0.08),
+            color: colorScheme.outline.withValues(alpha: 0.08),
           ),
         ),
       ),
@@ -62,7 +62,7 @@ class _CategoryPageState extends State<CategoryPage> {
                   Icon(
                     Icons.error_outline,
                     size: 64,
-                    color: colorScheme.error.withOpacity(0.7),
+                    color: colorScheme.error.withValues(alpha: 0.7),
                   ),
                   const SizedBox(height: 16),
                   Text(
@@ -85,13 +85,13 @@ class _CategoryPageState extends State<CategoryPage> {
                   Icon(
                     Icons.category_outlined,
                     size: 64,
-                    color: colorScheme.outline.withOpacity(0.4),
+                    color: colorScheme.outline.withValues(alpha: 0.4),
                   ),
                   const SizedBox(height: 16),
                   Text(
                     'No categories found',
                     style: TextStyle(
-                      color: colorScheme.onBackground.withOpacity(0.7),
+                      color: colorScheme.onBackground.withValues(alpha: 0.7),
                       fontSize: 18,
                       fontWeight: FontWeight.w500,
                     ),
@@ -100,7 +100,7 @@ class _CategoryPageState extends State<CategoryPage> {
                   Text(
                     'Categories will appear here when added',
                     style: TextStyle(
-                      color: colorScheme.onBackground.withOpacity(0.5),
+                      color: colorScheme.onBackground.withValues(alpha: 0.5),
                       fontSize: 14,
                     ),
                   ),
@@ -161,7 +161,7 @@ class _CategoryCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(theme.brightness == Brightness.dark ? 0.12 : 0.05),
+            color: Colors.black.withValues(alpha: theme.brightness == Brightness.dark ? 0.12 : 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -206,7 +206,7 @@ class _CategoryCard extends StatelessWidget {
                         Text(
                           category.description!,
                           style: theme.textTheme.bodySmall?.copyWith(
-                            color: colorScheme.onSurface.withOpacity(0.7),
+                            color: colorScheme.onSurface.withValues(alpha: 0.7),
                             height: 1.3,
                           ),
                           maxLines: 2,
@@ -219,7 +219,7 @@ class _CategoryCard extends StatelessWidget {
                 const SizedBox(width: 12),
                 Icon(
                   Icons.arrow_forward_ios,
-                  color: colorScheme.outline.withOpacity(0.4),
+                  color: colorScheme.outline.withValues(alpha: 0.4),
                   size: 16,
                 ),
               ],
