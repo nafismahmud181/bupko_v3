@@ -8,24 +8,23 @@ class CategoryBooksPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: colorScheme.background,
       appBar: AppBar(
         title: Text(
           category.name,
-          style: const TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 20,
-          ),
+          style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
         ),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black87,
+        backgroundColor: theme.appBarTheme.backgroundColor ?? colorScheme.background,
+        foregroundColor: theme.appBarTheme.foregroundColor ?? colorScheme.onBackground,
         elevation: 0,
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
           child: Container(
             height: 1,
-            color: Colors.grey[200],
+            color: colorScheme.outline.withOpacity(0.08),
           ),
         ),
       ),
@@ -33,10 +32,10 @@ class CategoryBooksPage extends StatelessWidget {
         future: DatabaseHelper().getBooksForCategory(category.id, limit: 100),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
+            return Center(
               child: CircularProgressIndicator(
                 strokeWidth: 2,
-                color: Colors.blue,
+                color: colorScheme.primary,
               ),
             );
           }
@@ -48,13 +47,13 @@ class CategoryBooksPage extends StatelessWidget {
                   Icon(
                     Icons.error_outline,
                     size: 64,
-                    color: Colors.red[300],
+                    color: colorScheme.error.withOpacity(0.7),
                   ),
                   const SizedBox(height: 16),
                   Text(
                     'Error: ${snapshot.error}',
                     style: TextStyle(
-                      color: Colors.red[700],
+                      color: colorScheme.error,
                       fontSize: 16,
                     ),
                   ),
@@ -71,13 +70,13 @@ class CategoryBooksPage extends StatelessWidget {
                   Icon(
                     Icons.book_outlined,
                     size: 64,
-                    color: Colors.grey[400],
+                    color: colorScheme.outline.withOpacity(0.4),
                   ),
                   const SizedBox(height: 16),
                   Text(
                     'No books found',
                     style: TextStyle(
-                      color: Colors.grey[600],
+                      color: colorScheme.onBackground.withOpacity(0.7),
                       fontSize: 18,
                       fontWeight: FontWeight.w500,
                     ),
@@ -86,7 +85,7 @@ class CategoryBooksPage extends StatelessWidget {
                   Text(
                     'Books in this category will appear here',
                     style: TextStyle(
-                      color: Colors.grey[500],
+                      color: colorScheme.onBackground.withOpacity(0.5),
                       fontSize: 14,
                     ),
                   ),
@@ -132,13 +131,15 @@ class _BookCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.cardColor,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withOpacity(theme.brightness == Brightness.dark ? 0.12 : 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -158,7 +159,7 @@ class _BookCard extends StatelessWidget {
                   height: 80,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(8),
-                    color: Colors.grey[200],
+                    color: colorScheme.surfaceVariant,
                   ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(8),
@@ -168,21 +169,21 @@ class _BookCard extends StatelessWidget {
                             fit: BoxFit.cover,
                             errorBuilder: (context, error, stackTrace) {
                               return Container(
-                                color: Colors.grey[300],
+                                color: colorScheme.surface,
                                 child: Icon(
                                   Icons.book,
                                   size: 32,
-                                  color: Colors.grey[600],
+                                  color: colorScheme.outline,
                                 ),
                               );
                             },
                           )
                         : Container(
-                            color: Colors.grey[300],
+                            color: colorScheme.surface,
                             child: Icon(
                               Icons.book,
                               size: 32,
-                              color: Colors.grey[600],
+                              color: colorScheme.outline,
                             ),
                           ),
                   ),
@@ -194,11 +195,7 @@ class _BookCard extends StatelessWidget {
                     children: [
                       Text(
                         book.title,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black87,
-                        ),
+                        style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600, color: colorScheme.onSurface),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -206,11 +203,7 @@ class _BookCard extends StatelessWidget {
                       if (book.authorName != null && book.authorName!.isNotEmpty)
                         Text(
                           book.authorName!,
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey[600],
-                            fontWeight: FontWeight.w500,
-                          ),
+                          style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurface.withOpacity(0.7), fontWeight: FontWeight.w500),
                         ),
                     ],
                   ),
@@ -218,7 +211,7 @@ class _BookCard extends StatelessWidget {
                 const SizedBox(width: 12),
                 Icon(
                   Icons.arrow_forward_ios,
-                  color: Colors.grey[400],
+                  color: colorScheme.outline.withOpacity(0.4),
                   size: 16,
                 ),
               ],

@@ -20,8 +20,10 @@ class _CategoryPageState extends State<CategoryPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: colorScheme.background,
       appBar: AppBar(
         title: const Text(
           'Categories',
@@ -30,14 +32,14 @@ class _CategoryPageState extends State<CategoryPage> {
             fontSize: 24,
           ),
         ),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black87,
+        backgroundColor: theme.appBarTheme.backgroundColor ?? colorScheme.background,
+        foregroundColor: theme.appBarTheme.foregroundColor ?? colorScheme.onBackground,
         elevation: 0,
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
           child: Container(
             height: 1,
-            color: Colors.grey[200],
+            color: colorScheme.outline.withOpacity(0.08),
           ),
         ),
       ),
@@ -45,10 +47,10 @@ class _CategoryPageState extends State<CategoryPage> {
         future: _categoriesFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
+            return Center(
               child: CircularProgressIndicator(
                 strokeWidth: 2,
-                color: Colors.blue,
+                color: colorScheme.primary,
               ),
             );
           }
@@ -60,13 +62,13 @@ class _CategoryPageState extends State<CategoryPage> {
                   Icon(
                     Icons.error_outline,
                     size: 64,
-                    color: Colors.red[300],
+                    color: colorScheme.error.withOpacity(0.7),
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'Error: ${snapshot.error}',
+                    'Error:  {snapshot.error}',
                     style: TextStyle(
-                      color: Colors.red[700],
+                      color: colorScheme.error,
                       fontSize: 16,
                     ),
                   ),
@@ -83,13 +85,13 @@ class _CategoryPageState extends State<CategoryPage> {
                   Icon(
                     Icons.category_outlined,
                     size: 64,
-                    color: Colors.grey[400],
+                    color: colorScheme.outline.withOpacity(0.4),
                   ),
                   const SizedBox(height: 16),
                   Text(
                     'No categories found',
                     style: TextStyle(
-                      color: Colors.grey[600],
+                      color: colorScheme.onBackground.withOpacity(0.7),
                       fontSize: 18,
                       fontWeight: FontWeight.w500,
                     ),
@@ -98,7 +100,7 @@ class _CategoryPageState extends State<CategoryPage> {
                   Text(
                     'Categories will appear here when added',
                     style: TextStyle(
-                      color: Colors.grey[500],
+                      color: colorScheme.onBackground.withOpacity(0.5),
                       fontSize: 14,
                     ),
                   ),
@@ -151,13 +153,15 @@ class _CategoryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.cardColor,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withOpacity(theme.brightness == Brightness.dark ? 0.12 : 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -192,19 +196,17 @@ class _CategoryCard extends StatelessWidget {
                     children: [
                       Text(
                         category.name,
-                        style: const TextStyle(
-                          fontSize: 18,
+                        style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.w600,
-                          color: Colors.black87,
+                          color: colorScheme.onSurface,
                         ),
                       ),
                       if (category.description != null && category.description!.isNotEmpty) ...[
                         const SizedBox(height: 4),
                         Text(
                           category.description!,
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey[600],
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: colorScheme.onSurface.withOpacity(0.7),
                             height: 1.3,
                           ),
                           maxLines: 2,
@@ -217,7 +219,7 @@ class _CategoryCard extends StatelessWidget {
                 const SizedBox(width: 12),
                 Icon(
                   Icons.arrow_forward_ios,
-                  color: Colors.grey[400],
+                  color: colorScheme.outline.withOpacity(0.4),
                   size: 16,
                 ),
               ],

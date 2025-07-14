@@ -27,21 +27,24 @@ class _BookDetailsPageState extends State<BookDetailsPage> with SingleTickerProv
   @override
   Widget build(BuildContext context) {
     final book = widget.book;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F6FA),
+      backgroundColor: colorScheme.background,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: Icon(Icons.arrow_back, color: colorScheme.onSurface),
           onPressed: () => Navigator.of(context).pop(),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.bookmark_border, color: Colors.black),
+            icon: Icon(Icons.bookmark_border, color: colorScheme.onSurface),
             onPressed: () {},
           ),
         ],
+        iconTheme: IconThemeData(color: colorScheme.onSurface),
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -62,8 +65,8 @@ class _BookDetailsPageState extends State<BookDetailsPage> with SingleTickerProv
                     : Container(
                         width: 180,
                         height: 240,
-                        color: Colors.grey[300],
-                        child: const Icon(Icons.book, size: 64, color: Colors.grey),
+                        color: colorScheme.surfaceVariant,
+                        child: Icon(Icons.book, size: 64, color: colorScheme.outline),
                       ),
               ),
             ),
@@ -71,14 +74,14 @@ class _BookDetailsPageState extends State<BookDetailsPage> with SingleTickerProv
             // Book Title
             Text(
               book.title,
-              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+              style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
               textAlign: TextAlign.center,
             ),
             if (book.authorName != null && book.authorName!.isNotEmpty) ...[
               const SizedBox(height: 6),
               Text(
                 book.authorName!,
-                style: const TextStyle(fontSize: 16, color: Colors.grey, fontWeight: FontWeight.w500),
+                style: theme.textTheme.bodyMedium?.copyWith(color: colorScheme.onSurface.withOpacity(0.7), fontWeight: FontWeight.w500),
                 textAlign: TextAlign.center,
               ),
             ],
@@ -87,6 +90,7 @@ class _BookDetailsPageState extends State<BookDetailsPage> with SingleTickerProv
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
+                _VerticalDivider(),
                 _InfoColumn(label: 'Rating', value: book.rating != null ? '${book.rating!.toStringAsFixed(1)}/5' : '4.9/5'),
                 _VerticalDivider(),
                 _InfoColumn(label: 'Read', value: '5.3k'),
@@ -99,7 +103,7 @@ class _BookDetailsPageState extends State<BookDetailsPage> with SingleTickerProv
             Container(
               padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 2),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: theme.cardColor,
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(
@@ -111,10 +115,10 @@ class _BookDetailsPageState extends State<BookDetailsPage> with SingleTickerProv
               ),
               child: TabBar(
                 controller: _tabController,
-                labelColor: Colors.white,
-                unselectedLabelColor: Colors.green,
+                labelColor: colorScheme.onPrimary,
+                unselectedLabelColor: colorScheme.primary,
                 indicator: BoxDecoration(
-                  color: Colors.green,
+                  color: colorScheme.primary,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 dividerColor: Colors.transparent,
@@ -127,12 +131,12 @@ class _BookDetailsPageState extends State<BookDetailsPage> with SingleTickerProv
                 ],
               ),
             ),
-            const Divider(height: 18, thickness: 1, color: Color(0xFFE5E5E5)),
+            Divider(height: 18, thickness: 1, color: colorScheme.outline.withOpacity(0.08)),
             // Tab Content
             Expanded(
               child: Container(
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: theme.cardColor,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: TabBarView(
@@ -142,7 +146,7 @@ class _BookDetailsPageState extends State<BookDetailsPage> with SingleTickerProv
                       padding: const EdgeInsets.all(16.0),
                       child: Text(
                         book.description ?? 'No description available.',
-                        style: const TextStyle(fontSize: 15, color: Colors.black87),
+                        style: theme.textTheme.bodyMedium,
                       ),
                     ),
                     const Center(child: Text('No reviews yet.')),
@@ -159,8 +163,8 @@ class _BookDetailsPageState extends State<BookDetailsPage> with SingleTickerProv
                   child: OutlinedButton(
                     onPressed: () {},
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.green,
-                      side: const BorderSide(color: Colors.green),
+                      foregroundColor: colorScheme.primary,
+                      side: BorderSide(color: colorScheme.primary),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                       padding: const EdgeInsets.symmetric(vertical: 16),
                     ),
@@ -172,8 +176,8 @@ class _BookDetailsPageState extends State<BookDetailsPage> with SingleTickerProv
                   child: ElevatedButton(
                     onPressed: () {},
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
-                      foregroundColor: Colors.white,
+                      backgroundColor: colorScheme.primary,
+                      foregroundColor: colorScheme.onPrimary,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                       padding: const EdgeInsets.symmetric(vertical: 16),
                     ),
@@ -197,16 +201,18 @@ class _InfoColumn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     return Column(
       children: [
         Text(
           value,
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+          style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 4),
         Text(
           label,
-          style: const TextStyle(fontSize: 12, color: Colors.grey),
+          style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurface.withOpacity(0.7)),
         ),
       ],
     );
@@ -216,11 +222,12 @@ class _InfoColumn extends StatelessWidget {
 class _VerticalDivider extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 12),
       height: 32,
       width: 1.5,
-      color: Colors.grey[300],
+      color: colorScheme.outline.withOpacity(0.15),
     );
   }
 } 
