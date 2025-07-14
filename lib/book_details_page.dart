@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'database_helper.dart';
+import 'package:dio/dio.dart';
+import 'package:path_provider/path_provider.dart';
+import 'dart:io';
 
 class BookDetailsPage extends StatefulWidget {
   final Book book;
@@ -11,6 +14,8 @@ class BookDetailsPage extends StatefulWidget {
 
 class _BookDetailsPageState extends State<BookDetailsPage> with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  bool _downloading = false;
+  double _downloadProgress = 0.0;
 
   @override
   void initState() {
@@ -22,6 +27,53 @@ class _BookDetailsPageState extends State<BookDetailsPage> with SingleTickerProv
   void dispose() {
     _tabController.dispose();
     super.dispose();
+  }
+
+  Future<void> _downloadBook() async {
+    final book = widget.book;
+    String? url = book.epubDownloadUrl ?? book.pdfDownloadUrl ?? book.txtDownloadUrl;
+    String? ext;
+    if (book.epubDownloadUrl != null) ext = 'epub';
+    else if (book.pdfDownloadUrl != null) ext = 'pdf';
+    else if (book.txtDownloadUrl != null) ext = 'txt';
+    if (url == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No downloadable file available for this book.')),
+      );
+      return;
+    }
+    setState(() {
+      _downloading = true;
+      _downloadProgress = 0.0;
+    });
+    try {
+      final dir = await getApplicationDocumentsDirectory();
+      final savePath = '${dir.path}/${book.title.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_')}.${ext ?? 'file'}';
+      await Dio().download(
+        url,
+        savePath,
+        onReceiveProgress: (received, total) {
+          if (total != -1) {
+            setState(() {
+              _downloadProgress = received / total;
+            });
+          }
+        },
+      );
+      setState(() {
+        _downloading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Downloaded to $savePath')),
+      );
+    } catch (e) {
+      setState(() {
+        _downloading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Download failed: $e')),
+      );
+    }
   }
 
   @override
@@ -174,18 +226,37 @@ class _BookDetailsPageState extends State<BookDetailsPage> with SingleTickerProv
                 const SizedBox(width: 16),
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: () {},
+                    onPressed: _downloading ? null : _downloadBook,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: colorScheme.primary,
                       foregroundColor: colorScheme.onPrimary,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                       padding: const EdgeInsets.symmetric(vertical: 16),
                     ),
-                    child: const Text('Buy Now', style: TextStyle(fontSize: 16)),
+                    child: _downloading
+                        ? SizedBox(
+                            height: 18,
+                            width: 18,
+                            child: CircularProgressIndicator(
+                              value: _downloadProgress,
+                              strokeWidth: 2.5,
+                              color: colorScheme.onPrimary,
+                            ),
+                          )
+                        : const Text('Download', style: TextStyle(fontSize: 16)),
                   ),
                 ),
               ],
             ),
+            if (_downloading) ...[
+              const SizedBox(height: 12),
+              LinearProgressIndicator(
+                value: _downloadProgress > 0 ? _downloadProgress : null,
+                minHeight: 6,
+                backgroundColor: colorScheme.surfaceVariant,
+                valueColor: AlwaysStoppedAnimation<Color>(colorScheme.primary),
+              ),
+            ],
             const SizedBox(height: 18),
           ],
         ),
