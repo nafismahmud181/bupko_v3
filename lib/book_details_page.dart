@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:epub_view/epub_view.dart';
 import 'dart:io';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class BookDetailsPage extends widgets.StatefulWidget {
   final Book book;
@@ -399,11 +400,41 @@ class EpubReaderScreen extends widgets.StatefulWidget {
 class _EpubReaderScreenState extends widgets.State<EpubReaderScreen> {
   late EpubController _epubController;
   bool _isLoading = true;
+  bool _showSettings = false;
+  
+  // Font settings
+  double _fontSize = 16.0;
+  String _fontFamily = 'serif';
+  final List<String> _fontFamilies = [
+    'serif',
+    'sans-serif',
+    'monospace',
+    'Georgia',
+    'Times New Roman',
+    'Arial',
+    'Helvetica',
+    'Courier New',
+  ];
 
   @override
   void initState() {
     super.initState();
+    _loadFontSettings();
     _initEpubController();
+  }
+
+  Future<void> _loadFontSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _fontSize = prefs.getDouble('fontSize') ?? 16.0;
+      _fontFamily = prefs.getString('fontFamily') ?? 'serif';
+    });
+  }
+
+  Future<void> _saveFontSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble('fontSize', _fontSize);
+    await prefs.setString('fontFamily', _fontFamily);
   }
 
   void _initEpubController() async {
@@ -429,6 +460,26 @@ class _EpubReaderScreenState extends widgets.State<EpubReaderScreen> {
   void dispose() {
     _epubController.dispose();
     super.dispose();
+  }
+
+  void _toggleSettings() {
+    setState(() {
+      _showSettings = !_showSettings;
+    });
+  }
+
+  void _updateFontSize(double size) {
+    setState(() {
+      _fontSize = size;
+    });
+    _saveFontSettings();
+  }
+
+  void _updateFontFamily(String family) {
+    setState(() {
+      _fontFamily = family;
+    });
+    _saveFontSettings();
   }
 
   @override
@@ -462,33 +513,138 @@ class _EpubReaderScreenState extends widgets.State<EpubReaderScreen> {
           ),
           widgets.IconButton(
             icon: widgets.Icon(widgets.Icons.settings, color: colorScheme.onSurface),
-            onPressed: () {
-              // Add settings functionality
-            },
+            onPressed: _toggleSettings,
           ),
         ],
       ),
-      body: _isLoading
-          ? const widgets.Center(child: widgets.CircularProgressIndicator())
-          : EpubView(
-              controller: _epubController,
-              onExternalLinkPressed: (href) {
-                // Handle external links
-                print('External link pressed: $href');
-              },
-              onDocumentLoaded: (document) {
-                print('Document loaded: ${document.Title}');
-              },
-              onChapterChanged: (chapter) {
-                // print('Chapter changed: ${chapter?.Title}');
-              },
-              onDocumentError: (error) {
-                print('Document error: $error');
-                widgets.ScaffoldMessenger.of(context).showSnackBar(
-                  widgets.SnackBar(content: widgets.Text('Error loading document: $error')),
-                );
-              },
+      body: widgets.Stack(
+        children: [
+          _isLoading
+              ? const widgets.Center(child: widgets.CircularProgressIndicator())
+              : EpubView(
+                  controller: _epubController,
+                  onExternalLinkPressed: (href) {
+                    print('External link pressed: $href');
+                  },
+                  onDocumentLoaded: (document) {
+                    print('Document loaded: ${document.Title}');
+                  },
+                  onChapterChanged: (chapter) {
+                    // print('Chapter changed: ${chapter?.Title}');
+                  },
+                  onDocumentError: (error) {
+                    print('Document error: $error');
+                    widgets.ScaffoldMessenger.of(context).showSnackBar(
+                      widgets.SnackBar(content: widgets.Text('Error loading document: $error')),
+                    );
+                  },
+                ),
+          if (_showSettings)
+            widgets.Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: widgets.Container(
+                padding: const widgets.EdgeInsets.all(16),
+                decoration: widgets.BoxDecoration(
+                  color: colorScheme.surface,
+                  boxShadow: [
+                    widgets.BoxShadow(
+                      color: widgets.Colors.black.withOpacity(0.1),
+                      blurRadius: 8,
+                      offset: const widgets.Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: widgets.Column(
+                  crossAxisAlignment: widgets.CrossAxisAlignment.start,
+                  mainAxisSize: widgets.MainAxisSize.min,
+                  children: [
+                    widgets.Row(
+                      mainAxisAlignment: widgets.MainAxisAlignment.spaceBetween,
+                      children: [
+                        widgets.Text(
+                          'Reading Settings',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: widgets.FontWeight.bold,
+                          ),
+                        ),
+                        widgets.IconButton(
+                          icon: widgets.Icon(widgets.Icons.close),
+                          onPressed: _toggleSettings,
+                        ),
+                      ],
+                    ),
+                    const widgets.SizedBox(height: 16),
+                    // Font Size Control
+                    widgets.Text(
+                      'Font Size: ${_fontSize.round()}',
+                      style: theme.textTheme.bodyMedium,
+                    ),
+                    widgets.Slider(
+                      value: _fontSize,
+                      min: 12.0,
+                      max: 24.0,
+                      divisions: 12,
+                      label: _fontSize.round().toString(),
+                      onChanged: _updateFontSize,
+                    ),
+                    const widgets.SizedBox(height: 16),
+                    // Font Family Control
+                    widgets.Text(
+                      'Font Family',
+                      style: theme.textTheme.bodyMedium,
+                    ),
+                    const widgets.SizedBox(height: 8),
+                    widgets.DropdownButtonFormField<String>(
+                      value: _fontFamily,
+                      decoration: widgets.InputDecoration(
+                        border: widgets.OutlineInputBorder(
+                          borderRadius: widgets.BorderRadius.circular(8),
+                        ),
+                        contentPadding: const widgets.EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                      ),
+                      items: _fontFamilies.map((font) {
+                        return widgets.DropdownMenuItem(
+                          value: font,
+                          child: widgets.Text(
+                            font,
+                            style: widgets.TextStyle(fontFamily: font),
+                          ),
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        if (value != null) {
+                          _updateFontFamily(value);
+                        }
+                      },
+                    ),
+                    const widgets.SizedBox(height: 16),
+                    // Preview Text
+                    widgets.Container(
+                      padding: const widgets.EdgeInsets.all(12),
+                      decoration: widgets.BoxDecoration(
+                        color: colorScheme.surfaceVariant,
+                        borderRadius: widgets.BorderRadius.circular(8),
+                      ),
+                      child: widgets.Text(
+                        'Preview: The quick brown fox jumps over the lazy dog.',
+                        style: widgets.TextStyle(
+                          fontSize: _fontSize,
+                          fontFamily: _fontFamily,
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
+        ],
+      ),
     );
   }
 }
