@@ -8,6 +8,7 @@ import 'login_page.dart';
 import 'main.dart';
 import 'category_page.dart';
 import 'setting_page.dart';
+import 'category_books_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -573,7 +574,7 @@ class ModernCategorySection extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const CategoryPage(),
+                        builder: (context) => CategoryBooksPage(category: categoryWithBooks.category),
                       ),
                     );
                   },
