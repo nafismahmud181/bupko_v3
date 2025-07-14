@@ -62,7 +62,7 @@ class _SettingPageState extends State<SettingPage> with TickerProviderStateMixin
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
-        foregroundColor: theme.colorScheme.onBackground,
+        foregroundColor: theme.colorScheme.onSurface,
         centerTitle: true,
       ),
       body: FadeTransition(
@@ -117,7 +117,7 @@ class _SettingPageState extends State<SettingPage> with TickerProviderStateMixin
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -155,7 +155,7 @@ class _SettingPageState extends State<SettingPage> with TickerProviderStateMixin
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
-                    color: theme.colorScheme.onBackground,
+                    color: theme.colorScheme.onSurface,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -163,7 +163,7 @@ class _SettingPageState extends State<SettingPage> with TickerProviderStateMixin
                   user != null ? 'Premium Reader' : 'Guest Mode',
                   style: TextStyle(
                     fontSize: 14,
-                    color: theme.colorScheme.onBackground.withOpacity(0.7),
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
                   ),
                 ),
               ],
@@ -173,7 +173,7 @@ class _SettingPageState extends State<SettingPage> with TickerProviderStateMixin
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: Colors.green.withOpacity(0.1),
+                color: Colors.green.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: const Text(
@@ -204,7 +204,7 @@ class _SettingPageState extends State<SettingPage> with TickerProviderStateMixin
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w600,
-            color: theme.colorScheme.onBackground,
+            color: theme.colorScheme.onSurface,
           ),
         ),
       ],
@@ -218,7 +218,7 @@ class _SettingPageState extends State<SettingPage> with TickerProviderStateMixin
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -256,7 +256,7 @@ class _SettingPageState extends State<SettingPage> with TickerProviderStateMixin
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -270,7 +270,7 @@ class _SettingPageState extends State<SettingPage> with TickerProviderStateMixin
             subtitle: 'Adjust reading font size',
             trailing: Icon(
               Icons.chevron_right,
-              color: theme.colorScheme.onBackground.withOpacity(0.5),
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
             ),
             theme: theme,
             onTap: () {
@@ -284,7 +284,7 @@ class _SettingPageState extends State<SettingPage> with TickerProviderStateMixin
             subtitle: 'Reading page turn effects',
             trailing: Icon(
               Icons.chevron_right,
-              color: theme.colorScheme.onBackground.withOpacity(0.5),
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
             ),
             theme: theme,
             onTap: () {
@@ -317,7 +317,7 @@ class _SettingPageState extends State<SettingPage> with TickerProviderStateMixin
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -331,7 +331,7 @@ class _SettingPageState extends State<SettingPage> with TickerProviderStateMixin
             subtitle: 'Sync your books across devices',
             trailing: Icon(
               Icons.chevron_right,
-              color: theme.colorScheme.onBackground.withOpacity(0.5),
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
             ),
             theme: theme,
             onTap: () {
@@ -345,7 +345,7 @@ class _SettingPageState extends State<SettingPage> with TickerProviderStateMixin
             subtitle: 'Backup your reading progress',
             trailing: Icon(
               Icons.chevron_right,
-              color: theme.colorScheme.onBackground.withOpacity(0.5),
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
             ),
             theme: theme,
             onTap: () {
@@ -359,7 +359,7 @@ class _SettingPageState extends State<SettingPage> with TickerProviderStateMixin
             subtitle: 'Log out of your account',
             trailing: Icon(
               Icons.chevron_right,
-              color: Colors.red.withOpacity(0.7),
+              color: Colors.red.withValues(alpha: 0.7),
             ),
             theme: theme,
             isDestructive: true,
@@ -393,8 +393,8 @@ class _SettingPageState extends State<SettingPage> with TickerProviderStateMixin
               height: 44,
               decoration: BoxDecoration(
                 color: isDestructive 
-                    ? Colors.red.withOpacity(0.1)
-                    : theme.colorScheme.primary.withOpacity(0.1),
+                    ? Colors.red.withValues(alpha: 0.1)
+                    : theme.colorScheme.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(
@@ -415,7 +415,7 @@ class _SettingPageState extends State<SettingPage> with TickerProviderStateMixin
                       fontWeight: FontWeight.w500,
                       color: isDestructive 
                           ? Colors.red 
-                          : theme.colorScheme.onBackground,
+                          : theme.colorScheme.onSurface,
                     ),
                   ),
                   const SizedBox(height: 2),
@@ -423,7 +423,7 @@ class _SettingPageState extends State<SettingPage> with TickerProviderStateMixin
                     subtitle,
                     style: TextStyle(
                       fontSize: 14,
-                      color: theme.colorScheme.onBackground.withOpacity(0.7),
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
                     ),
                   ),
                 ],
@@ -441,7 +441,7 @@ class _SettingPageState extends State<SettingPage> with TickerProviderStateMixin
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Divider(
         height: 1,
-        color: theme.colorScheme.onBackground.withOpacity(0.1),
+        color: theme.colorScheme.onSurface.withValues(alpha: 0.1),
       ),
     );
   }
@@ -463,9 +463,12 @@ class _SettingPageState extends State<SettingPage> with TickerProviderStateMixin
             ),
             TextButton(
               onPressed: () async {
-                Navigator.of(context).pop();
+                final navigator = Navigator.of(context);
+                navigator.pop();
                 await FirebaseAuth.instance.signOut();
-                Navigator.of(context).pop();
+                if (mounted) {
+                  navigator.pop();
+                }
               },
               style: TextButton.styleFrom(
                 foregroundColor: Colors.red,
