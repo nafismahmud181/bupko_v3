@@ -245,6 +245,7 @@ class _SettingPageState extends State<SettingPage> with TickerProviderStateMixin
       borderRadius: BorderRadius.circular(16),
       color: Colors.transparent,
       child: Container(
+        constraints: const BoxConstraints(minWidth: 120, maxWidth: 160),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
           color: isDark ? Colors.grey[800] : Colors.white,
@@ -264,7 +265,6 @@ class _SettingPageState extends State<SettingPage> with TickerProviderStateMixin
         child: DropdownButtonHideUnderline(
           child: DropdownButton<ThemeMode>(
             value: currentMode,
-            isExpanded: true,
             onChanged: (ThemeMode? newMode) {
               if (newMode != null) {
                 setState(() {
