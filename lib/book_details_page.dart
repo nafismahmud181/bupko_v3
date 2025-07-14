@@ -1,26 +1,27 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' as widgets;
 import 'database_helper.dart';
 import 'package:dio/dio.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:epub_view/epub_view.dart';
 import 'dart:io';
 
-class BookDetailsPage extends StatefulWidget {
+class BookDetailsPage extends widgets.StatefulWidget {
   final Book book;
   const BookDetailsPage({super.key, required this.book});
 
   @override
-  State<BookDetailsPage> createState() => _BookDetailsPageState();
+  widgets.State<BookDetailsPage> createState() => _BookDetailsPageState();
 }
 
-class _BookDetailsPageState extends State<BookDetailsPage> with SingleTickerProviderStateMixin {
-  late TabController _tabController;
+class _BookDetailsPageState extends widgets.State<BookDetailsPage> with widgets.SingleTickerProviderStateMixin {
+  late widgets.TabController _tabController;
   bool _downloading = false;
   double _downloadProgress = 0.0;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = widgets.TabController(length: 3, vsync: this);
   }
 
   @override
@@ -36,19 +37,23 @@ class _BookDetailsPageState extends State<BookDetailsPage> with SingleTickerProv
     if (book.epubDownloadUrl != null) ext = 'epub';
     else if (book.pdfDownloadUrl != null) ext = 'pdf';
     else if (book.txtDownloadUrl != null) ext = 'txt';
+    
     if (url == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No downloadable file available for this book.')),
+      widgets.ScaffoldMessenger.of(context).showSnackBar(
+        const widgets.SnackBar(content: widgets.Text('No downloadable file available for this book.')),
       );
       return;
     }
+    
     setState(() {
       _downloading = true;
       _downloadProgress = 0.0;
     });
+    
     try {
       final dir = await getApplicationDocumentsDirectory();
       final savePath = '${dir.path}/${book.title.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_')}.${ext ?? 'file'}';
+      
       await Dio().download(
         url,
         savePath,
@@ -60,87 +65,118 @@ class _BookDetailsPageState extends State<BookDetailsPage> with SingleTickerProv
           }
         },
       );
+      
       setState(() {
         _downloading = false;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Downloaded to $savePath')),
+      
+      widgets.ScaffoldMessenger.of(context).showSnackBar(
+        widgets.SnackBar(content: widgets.Text('Downloaded to $savePath')),
       );
+      
+      // Open EPUB with epub_view
+      if (ext == 'epub') {
+        try {
+          final file = File(savePath);
+          if (await file.exists()) {
+            widgets.Navigator.push(
+              context,
+              widgets.MaterialPageRoute(
+                builder: (context) => EpubReaderScreen(
+                  filePath: savePath,
+                  bookTitle: book.title,
+                ),
+              ),
+            );
+          } else {
+            throw Exception('File does not exist');
+          }
+        } catch (e) {
+          print('Error opening EPUB: $e');
+          widgets.ScaffoldMessenger.of(context).showSnackBar(
+            widgets.SnackBar(
+              content: widgets.Text('Failed to open EPUB: $e'),
+              backgroundColor: widgets.Colors.red,
+            ),
+          );
+        }
+      }
     } catch (e) {
       setState(() {
         _downloading = false;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Download failed: $e')),
+      widgets.ScaffoldMessenger.of(context).showSnackBar(
+        widgets.SnackBar(content: widgets.Text('Download failed: $e')),
       );
     }
   }
 
   @override
-  Widget build(BuildContext context) {
+  widgets.Widget build(widgets.BuildContext context) {
     final book = widget.book;
-    final theme = Theme.of(context);
+    final theme = widgets.Theme.of(context);
     final colorScheme = theme.colorScheme;
-    return Scaffold(
+    
+    return widgets.Scaffold(
       backgroundColor: colorScheme.background,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
+      appBar: widgets.AppBar(
+        backgroundColor: widgets.Colors.transparent,
         elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: colorScheme.onSurface),
-          onPressed: () => Navigator.of(context).pop(),
+        leading: widgets.IconButton(
+          icon: widgets.Icon(widgets.Icons.arrow_back, color: colorScheme.onSurface),
+          onPressed: () => widgets.Navigator.of(context).pop(),
         ),
         actions: [
-          IconButton(
-            icon: Icon(Icons.bookmark_border, color: colorScheme.onSurface),
+          widgets.IconButton(
+            icon: widgets.Icon(widgets.Icons.bookmark_border, color: colorScheme.onSurface),
             onPressed: () {},
           ),
         ],
-        iconTheme: IconThemeData(color: colorScheme.onSurface),
+        iconTheme: widgets.IconThemeData(color: colorScheme.onSurface),
       ),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+      body: widgets.Padding(
+        padding: const widgets.EdgeInsets.symmetric(horizontal: 24.0),
+        child: widgets.Column(
+          crossAxisAlignment: widgets.CrossAxisAlignment.stretch,
           children: [
             // Book Cover
-            Center(
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(12),
+            widgets.Center(
+              child: widgets.ClipRRect(
+                borderRadius: widgets.BorderRadius.circular(12),
                 child: book.coverImageUrl != null && book.coverImageUrl!.isNotEmpty
-                    ? Image.network(
+                    ? widgets.Image.network(
                         book.coverImageUrl!,
                         width: 180,
                         height: 240,
-                        fit: BoxFit.cover,
+                        fit: widgets.BoxFit.cover,
                       )
-                    : Container(
+                    : widgets.Container(
                         width: 180,
                         height: 240,
                         color: colorScheme.surfaceVariant,
-                        child: Icon(Icons.book, size: 64, color: colorScheme.outline),
+                        child: widgets.Icon(widgets.Icons.book, size: 64, color: colorScheme.outline),
                       ),
               ),
             ),
-            const SizedBox(height: 24),
+            const widgets.SizedBox(height: 24),
             // Book Title
-            Text(
+            widgets.Text(
               book.title,
-              style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-              textAlign: TextAlign.center,
+              style: theme.textTheme.titleLarge?.copyWith(fontWeight: widgets.FontWeight.bold),
+              textAlign: widgets.TextAlign.center,
             ),
             if (book.authorName != null && book.authorName!.isNotEmpty) ...[
-              const SizedBox(height: 6),
-              Text(
+              const widgets.SizedBox(height: 6),
+              widgets.Text(
                 book.authorName!,
-                style: theme.textTheme.bodyMedium?.copyWith(color: colorScheme.onSurface.withOpacity(0.7), fontWeight: FontWeight.w500),
-                textAlign: TextAlign.center,
+                style: theme.textTheme.bodyMedium?.copyWith(color: colorScheme.onSurface.withOpacity(0.7), fontWeight: widgets.FontWeight.w500),
+                textAlign: widgets.TextAlign.center,
               ),
             ],
-            const SizedBox(height: 16),
+            const widgets.SizedBox(height: 16),
             // Book Info Row
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+            widgets.Row(
+              mainAxisAlignment: widgets.MainAxisAlignment.center,
               children: [
                 _VerticalDivider(),
                 _InfoColumn(label: 'Rating', value: book.rating != null ? '${book.rating!.toStringAsFixed(1)}/5' : '4.9/5'),
@@ -150,114 +186,114 @@ class _BookDetailsPageState extends State<BookDetailsPage> with SingleTickerProv
                 _InfoColumn(label: 'Pages', value: book.pages?.toString() ?? '-'),
               ],
             ),
-            const SizedBox(height: 24),
+            const widgets.SizedBox(height: 24),
             // Tabs
-            Container(
-              padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 2),
-              decoration: BoxDecoration(
+            widgets.Container(
+              padding: const widgets.EdgeInsets.symmetric(vertical: 6, horizontal: 2),
+              decoration: widgets.BoxDecoration(
                 color: theme.cardColor,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: widgets.BorderRadius.circular(12),
                 boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.03),
+                  widgets.BoxShadow(
+                    color: widgets.Colors.black.withOpacity(0.03),
                     blurRadius: 4,
-                    offset: const Offset(0, 2),
+                    offset: const widgets.Offset(0, 2),
                   ),
                 ],
               ),
-              child: TabBar(
+              child: widgets.TabBar(
                 controller: _tabController,
                 labelColor: colorScheme.onPrimary,
                 unselectedLabelColor: colorScheme.primary,
-                indicator: BoxDecoration(
+                indicator: widgets.BoxDecoration(
                   color: colorScheme.primary,
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: widgets.BorderRadius.circular(8),
                 ),
-                dividerColor: Colors.transparent,
-                indicatorSize: TabBarIndicatorSize.tab,
-                overlayColor: MaterialStateProperty.all(Colors.transparent),
+                dividerColor: widgets.Colors.transparent,
+                indicatorSize: widgets.TabBarIndicatorSize.tab,
+                overlayColor: widgets.MaterialStateProperty.all(widgets.Colors.transparent),
                 tabs: const [
-                  Tab(child: Align(alignment: Alignment.center, child: Text('Description'))),
-                  Tab(child: Align(alignment: Alignment.center, child: Text('Reviews'))),
-                  Tab(child: Align(alignment: Alignment.center, child: Text('Instruction'))),
+                  widgets.Tab(child: widgets.Align(alignment: widgets.Alignment.center, child: widgets.Text('Description'))),
+                  widgets.Tab(child: widgets.Align(alignment: widgets.Alignment.center, child: widgets.Text('Reviews'))),
+                  widgets.Tab(child: widgets.Align(alignment: widgets.Alignment.center, child: widgets.Text('Instruction'))),
                 ],
               ),
             ),
-            Divider(height: 18, thickness: 1, color: colorScheme.outline.withOpacity(0.08)),
+            widgets.Divider(height: 18, thickness: 1, color: colorScheme.outline.withOpacity(0.08)),
             // Tab Content
-            Expanded(
-              child: Container(
-                decoration: BoxDecoration(
+            widgets.Expanded(
+              child: widgets.Container(
+                decoration: widgets.BoxDecoration(
                   color: theme.cardColor,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: widgets.BorderRadius.circular(12),
                 ),
-                child: TabBarView(
+                child: widgets.TabBarView(
                   controller: _tabController,
                   children: [
-                    Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Text(
+                    widgets.Padding(
+                      padding: const widgets.EdgeInsets.all(16.0),
+                      child: widgets.Text(
                         book.description ?? 'No description available.',
                         style: theme.textTheme.bodyMedium,
                       ),
                     ),
-                    const Center(child: Text('No reviews yet.')),
-                    const Center(child: Text('No instructions available.')),
+                    const widgets.Center(child: widgets.Text('No reviews yet.')),
+                    const widgets.Center(child: widgets.Text('No instructions available.')),
                   ],
                 ),
               ),
             ),
-            const SizedBox(height: 18),
+            const widgets.SizedBox(height: 18),
             // Buttons
-            Row(
+            widgets.Row(
               children: [
-                Expanded(
-                  child: OutlinedButton(
+                widgets.Expanded(
+                  child: widgets.OutlinedButton(
                     onPressed: () {},
-                    style: OutlinedButton.styleFrom(
+                    style: widgets.OutlinedButton.styleFrom(
                       foregroundColor: colorScheme.primary,
-                      side: BorderSide(color: colorScheme.primary),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      side: widgets.BorderSide(color: colorScheme.primary),
+                      shape: widgets.RoundedRectangleBorder(borderRadius: widgets.BorderRadius.circular(8)),
+                      padding: const widgets.EdgeInsets.symmetric(vertical: 16),
                     ),
-                    child: const Text('Read Sample', style: TextStyle(fontSize: 16)),
+                    child: const widgets.Text('Read Sample', style: widgets.TextStyle(fontSize: 16)),
                   ),
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: ElevatedButton(
+                const widgets.SizedBox(width: 16),
+                widgets.Expanded(
+                  child: widgets.ElevatedButton(
                     onPressed: _downloading ? null : _downloadBook,
-                    style: ElevatedButton.styleFrom(
+                    style: widgets.ElevatedButton.styleFrom(
                       backgroundColor: colorScheme.primary,
                       foregroundColor: colorScheme.onPrimary,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: widgets.RoundedRectangleBorder(borderRadius: widgets.BorderRadius.circular(8)),
+                      padding: const widgets.EdgeInsets.symmetric(vertical: 16),
                     ),
                     child: _downloading
-                        ? SizedBox(
+                        ? widgets.SizedBox(
                             height: 18,
                             width: 18,
-                            child: CircularProgressIndicator(
+                            child: widgets.CircularProgressIndicator(
                               value: _downloadProgress,
                               strokeWidth: 2.5,
                               color: colorScheme.onPrimary,
                             ),
                           )
-                        : const Text('Download', style: TextStyle(fontSize: 16)),
+                        : const widgets.Text('Download', style: widgets.TextStyle(fontSize: 16)),
                   ),
                 ),
               ],
             ),
             if (_downloading) ...[
-              const SizedBox(height: 12),
-              LinearProgressIndicator(
+              const widgets.SizedBox(height: 12),
+              widgets.LinearProgressIndicator(
                 value: _downloadProgress > 0 ? _downloadProgress : null,
                 minHeight: 6,
                 backgroundColor: colorScheme.surfaceVariant,
-                valueColor: AlwaysStoppedAnimation<Color>(colorScheme.primary),
+                valueColor: widgets.AlwaysStoppedAnimation<widgets.Color>(colorScheme.primary),
               ),
             ],
-            const SizedBox(height: 18),
+            const widgets.SizedBox(height: 18),
           ],
         ),
       ),
@@ -265,23 +301,135 @@ class _BookDetailsPageState extends State<BookDetailsPage> with SingleTickerProv
   }
 }
 
-class _InfoColumn extends StatelessWidget {
+// Custom EPUB Reader Screen using epub_view
+class EpubReaderScreen extends widgets.StatefulWidget {
+  final String filePath;
+  final String bookTitle;
+  
+  const EpubReaderScreen({
+    widgets.Key? key,
+    required this.filePath,
+    required this.bookTitle,
+  }) : super(key: key);
+
+  @override
+  widgets.State<EpubReaderScreen> createState() => _EpubReaderScreenState();
+}
+
+class _EpubReaderScreenState extends widgets.State<EpubReaderScreen> {
+  late EpubController _epubController;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _initEpubController();
+  }
+
+  void _initEpubController() async {
+    try {
+      _epubController = EpubController(
+        document: EpubDocument.openFile(File(widget.filePath)),
+      );
+      setState(() {
+        _isLoading = false;
+      });
+    } catch (e) {
+      print('Error initializing EPUB controller: $e');
+      setState(() {
+        _isLoading = false;
+      });
+      widgets.ScaffoldMessenger.of(context).showSnackBar(
+        widgets.SnackBar(content: widgets.Text('Failed to open EPUB: $e')),
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _epubController.dispose();
+    super.dispose();
+  }
+
+  @override
+  widgets.Widget build(widgets.BuildContext context) {
+    final theme = widgets.Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    
+    return widgets.Scaffold(
+      backgroundColor: colorScheme.background,
+      appBar: widgets.AppBar(
+        backgroundColor: colorScheme.surface,
+        elevation: 1,
+        title: _isLoading
+            ? widgets.Text(widget.bookTitle)
+            : EpubViewActualChapter(
+                controller: _epubController,
+                builder: (chapterValue) => widgets.Text(
+                  chapterValue?.chapter?.Title?.replaceAll('\n', '').trim() ?? 
+                  widget.bookTitle,
+                  style: theme.textTheme.titleMedium,
+                ),
+              ),
+        leading: widgets.IconButton(
+          icon: widgets.Icon(widgets.Icons.arrow_back, color: colorScheme.onSurface),
+          onPressed: () => widgets.Navigator.of(context).pop(),
+        ),
+        actions: [
+          widgets.IconButton(
+            icon: widgets.Icon(widgets.Icons.bookmark_border, color: colorScheme.onSurface),
+            onPressed: () {},
+          ),
+          widgets.IconButton(
+            icon: widgets.Icon(widgets.Icons.settings, color: colorScheme.onSurface),
+            onPressed: () {
+              // Add settings functionality
+            },
+          ),
+        ],
+      ),
+      body: _isLoading
+          ? const widgets.Center(child: widgets.CircularProgressIndicator())
+          : EpubView(
+              controller: _epubController,
+              onExternalLinkPressed: (href) {
+                // Handle external links
+                print('External link pressed: $href');
+              },
+              onDocumentLoaded: (document) {
+                print('Document loaded: ${document.Title}');
+              },
+              onChapterChanged: (chapter) {
+                // print('Chapter changed: ${chapter?.Title}');
+              },
+              onDocumentError: (error) {
+                print('Document error: $error');
+                widgets.ScaffoldMessenger.of(context).showSnackBar(
+                  widgets.SnackBar(content: widgets.Text('Error loading document: $error')),
+                );
+              },
+            ),
+    );
+  }
+}
+
+class _InfoColumn extends widgets.StatelessWidget {
   final String label;
   final String value;
   const _InfoColumn({required this.label, required this.value});
 
   @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+  widgets.Widget build(widgets.BuildContext context) {
+    final theme = widgets.Theme.of(context);
     final colorScheme = theme.colorScheme;
-    return Column(
+    return widgets.Column(
       children: [
-        Text(
+        widgets.Text(
           value,
-          style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
+          style: theme.textTheme.bodyLarge?.copyWith(fontWeight: widgets.FontWeight.bold),
         ),
-        const SizedBox(height: 4),
-        Text(
+        const widgets.SizedBox(height: 4),
+        widgets.Text(
           label,
           style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurface.withOpacity(0.7)),
         ),
@@ -290,15 +438,15 @@ class _InfoColumn extends StatelessWidget {
   }
 }
 
-class _VerticalDivider extends StatelessWidget {
+class _VerticalDivider extends widgets.StatelessWidget {
   @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 12),
+  widgets.Widget build(widgets.BuildContext context) {
+    final colorScheme = widgets.Theme.of(context).colorScheme;
+    return widgets.Container(
+      margin: const widgets.EdgeInsets.symmetric(horizontal: 12),
       height: 32,
       width: 1.5,
       color: colorScheme.outline.withOpacity(0.15),
     );
   }
-} 
+}
