@@ -3,6 +3,8 @@ import 'database_helper.dart';
 import 'search_page.dart';
 import 'book_upload_form_page.dart';
 import 'book_details_page.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'login_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -33,6 +35,7 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
@@ -54,6 +57,38 @@ class _HomePageState extends State<HomePage> {
             tooltip: 'Refresh Database',
           ),
         ],
+      ),
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            UserAccountsDrawerHeader(
+              accountName: Text(user?.email ?? 'Guest'),
+              accountEmail: user != null ? Text(user.email ?? '') : null,
+              currentAccountPicture: CircleAvatar(
+                child: Icon(Icons.person, size: 36),
+              ),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            ),
+            ListTile(
+              leading: Icon(user != null ? Icons.logout : Icons.login),
+              title: Text(user != null ? 'Logout' : 'Login'),
+              onTap: () async {
+                Navigator.pop(context); // Close the drawer
+                if (user != null) {
+                  await FirebaseAuth.instance.signOut();
+                } else {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const LoginPage()),
+                  );
+                }
+              },
+            ),
+          ],
+        ),
       ),
       body: FutureBuilder<List<CategoryWithBooks>>(
         future: _booksFuture,

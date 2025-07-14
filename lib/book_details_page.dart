@@ -87,7 +87,6 @@ class _BookDetailsPageState extends State<BookDetailsPage> with SingleTickerProv
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                _VerticalDivider(),
                 _InfoColumn(label: 'Rating', value: book.rating != null ? '${book.rating!.toStringAsFixed(1)}/5' : '4.9/5'),
                 _VerticalDivider(),
                 _InfoColumn(label: 'Read', value: '5.3k'),
