@@ -6,6 +6,7 @@ import 'book_details_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'login_page.dart';
 import 'main.dart';
+import 'category_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -86,6 +87,17 @@ class _HomePageState extends State<HomePage> {
                     MaterialPageRoute(builder: (context) => const LoginPage()),
                   );
                 }
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.category),
+              title: const Text('Categories'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const CategoryPage()),
+                );
               },
             ),
             const Divider(),
