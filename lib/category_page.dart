@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'database_helper.dart';
+import 'book_details_page.dart';
 
 class CategoryPage extends StatefulWidget {
   const CategoryPage({super.key});
@@ -48,7 +49,63 @@ class _CategoryPageState extends State<CategoryPage> {
                     : null,
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () {
-                  // TODO: Navigate to category books page
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => CategoryBooksPage(category: category),
+                    ),
+                  );
+                },
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+}
+
+class CategoryBooksPage extends StatelessWidget {
+  final Category category;
+  const CategoryBooksPage({super.key, required this.category});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(category.name),
+      ),
+      body: FutureBuilder<List<Book>>(
+        future: DatabaseHelper().getBooksForCategory(category.id, limit: 100),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasError) {
+            return Center(child: Text('Error: \\${snapshot.error}'));
+          }
+          final books = snapshot.data ?? [];
+          if (books.isEmpty) {
+            return const Center(child: Text('No books found in this category.'));
+          }
+          return ListView.separated(
+            itemCount: books.length,
+            separatorBuilder: (context, index) => const Divider(height: 1),
+            itemBuilder: (context, index) {
+              final book = books[index];
+              return ListTile(
+                leading: book.coverImageUrl != null && book.coverImageUrl!.isNotEmpty
+                    ? Image.network(book.coverImageUrl!, width: 40, height: 60, fit: BoxFit.cover)
+                    : const Icon(Icons.book, size: 40),
+                title: Text(book.title),
+                subtitle: Text(book.authorName ?? ''),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => BookDetailsPage(book: book),
+                    ),
+                  );
                 },
               );
             },
