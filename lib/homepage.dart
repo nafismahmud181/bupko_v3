@@ -5,6 +5,7 @@ import 'book_upload_form_page.dart';
 import 'book_details_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'login_page.dart';
+import 'main.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -86,6 +87,22 @@ class _HomePageState extends State<HomePage> {
                   );
                 }
               },
+            ),
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.brightness_6),
+              title: const Text('Dark Mode'),
+              trailing: ValueListenableBuilder<ThemeMode>(
+                valueListenable: themeModeNotifier,
+                builder: (context, mode, _) {
+                  return Switch(
+                    value: mode == ThemeMode.dark,
+                    onChanged: (val) {
+                      themeModeNotifier.value = val ? ThemeMode.dark : ThemeMode.light;
+                    },
+                  );
+                },
+              ),
             ),
           ],
         ),
