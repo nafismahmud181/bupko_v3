@@ -128,18 +128,18 @@ class _HomePageState extends State<HomePage> {
             },
             child: Container(
               decoration: BoxDecoration(
-                color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
+                color: theme.colorScheme.surfaceVariant.withValues(alpha:0.5),
                 borderRadius: BorderRadius.circular(16),
               ),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               child: Row(
                 children: [
-                  Icon(Icons.search_rounded, color: theme.colorScheme.onSurface.withOpacity(0.5)),
+                  Icon(Icons.search_rounded, color: theme.colorScheme.onSurface.withValues(alpha:0.5)),
                   const SizedBox(width: 8),
                   Text(
                     'Search...',
                     style: TextStyle(
-                      color: theme.colorScheme.onSurface.withOpacity(0.5),
+                      color: theme.colorScheme.onSurface.withValues(alpha:0.5),
                       fontSize: 16,
                     ),
                   ),

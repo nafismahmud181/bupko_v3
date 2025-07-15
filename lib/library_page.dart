@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart' as widgets;
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
-import 'database_helper.dart';
 import 'epub_reader_page.dart';
 
 class LibraryPage extends widgets.StatefulWidget {
@@ -81,7 +80,6 @@ class _LibraryPageState extends widgets.State<LibraryPage> with widgets.SingleTi
       
       _animationController.forward();
     } catch (e) {
-      print('Error loading downloaded books: $e');
       setState(() {
         _isLoading = false;
       });
@@ -218,7 +216,7 @@ class _LibraryPageState extends widgets.State<LibraryPage> with widgets.SingleTi
       shape: widgets.RoundedRectangleBorder(
         borderRadius: widgets.BorderRadius.circular(16),
         side: widgets.BorderSide(
-          color: colorScheme.outline.withOpacity(0.1),
+          color: colorScheme.outline.withValues(alpha:0.1),
           width: 1,
         ),
       ),
@@ -235,7 +233,7 @@ class _LibraryPageState extends widgets.State<LibraryPage> with widgets.SingleTi
                 width: 60,
                 height: 80,
                 decoration: widgets.BoxDecoration(
-                  color: colorScheme.primary.withOpacity(0.1),
+                  color: colorScheme.primary.withValues(alpha:0.1),
                   borderRadius: widgets.BorderRadius.circular(8),
                 ),
                 child: widgets.Icon(
@@ -269,7 +267,7 @@ class _LibraryPageState extends widgets.State<LibraryPage> with widgets.SingleTi
                             vertical: 2,
                           ),
                           decoration: widgets.BoxDecoration(
-                            color: colorScheme.secondary.withOpacity(0.1),
+                            color: colorScheme.secondary.withValues(alpha:0.1),
                             borderRadius: widgets.BorderRadius.circular(12),
                           ),
                           child: widgets.Text(
@@ -284,7 +282,7 @@ class _LibraryPageState extends widgets.State<LibraryPage> with widgets.SingleTi
                         widgets.Text(
                           _formatFileSize(book.fileSize),
                           style: theme.textTheme.bodySmall?.copyWith(
-                            color: colorScheme.onSurface.withOpacity(0.6),
+                            color: colorScheme.onSurface.withValues(alpha:0.6),
                           ),
                         ),
                       ],
@@ -293,7 +291,7 @@ class _LibraryPageState extends widgets.State<LibraryPage> with widgets.SingleTi
                     widgets.Text(
                       'Downloaded ${_formatDate(book.lastModified)}',
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: colorScheme.onSurface.withOpacity(0.5),
+                        color: colorScheme.onSurface.withValues(alpha:0.5),
                       ),
                     ),
                   ],
@@ -309,7 +307,7 @@ class _LibraryPageState extends widgets.State<LibraryPage> with widgets.SingleTi
                       color: colorScheme.primary,
                     ),
                     style: widgets.IconButton.styleFrom(
-                      backgroundColor: colorScheme.primary.withOpacity(0.1),
+                      backgroundColor: colorScheme.primary.withValues(alpha:0.1),
                       shape: widgets.RoundedRectangleBorder(
                         borderRadius: widgets.BorderRadius.circular(8),
                       ),
@@ -320,10 +318,10 @@ class _LibraryPageState extends widgets.State<LibraryPage> with widgets.SingleTi
                     onPressed: () => _showDeleteDialog(book),
                     icon: widgets.Icon(
                       widgets.Icons.delete_outline,
-                      color: widgets.Colors.red.withOpacity(0.7),
+                      color: widgets.Colors.red.withValues(alpha:0.7),
                     ),
                     style: widgets.IconButton.styleFrom(
-                      backgroundColor: widgets.Colors.red.withOpacity(0.1),
+                      backgroundColor: widgets.Colors.red.withValues(alpha:0.1),
                       shape: widgets.RoundedRectangleBorder(
                         borderRadius: widgets.BorderRadius.circular(8),
                       ),
@@ -380,7 +378,7 @@ class _LibraryPageState extends widgets.State<LibraryPage> with widgets.SingleTi
                   widgets.Text(
                     'Loading your library...',
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      color: colorScheme.onSurface.withOpacity(0.6),
+                      color: colorScheme.onSurface.withValues(alpha:0.6),
                     ),
                   ),
                 ],
@@ -397,7 +395,7 @@ class _LibraryPageState extends widgets.State<LibraryPage> with widgets.SingleTi
                       color: colorScheme.surface,
                       borderRadius: widgets.BorderRadius.circular(16),
                       border: widgets.Border.all(
-                        color: colorScheme.outline.withOpacity(0.1),
+                        color: colorScheme.outline.withValues(alpha:0.1),
                       ),
                     ),
                     child: widgets.TextField(
@@ -410,7 +408,7 @@ class _LibraryPageState extends widgets.State<LibraryPage> with widgets.SingleTi
                         hintText: 'Search your books...',
                         prefixIcon: widgets.Icon(
                           widgets.Icons.search,
-                          color: colorScheme.onSurface.withOpacity(0.6),
+                          color: colorScheme.onSurface.withValues(alpha:0.6),
                         ),
                         border: widgets.InputBorder.none,
                         contentPadding: const widgets.EdgeInsets.symmetric(
@@ -435,7 +433,7 @@ class _LibraryPageState extends widgets.State<LibraryPage> with widgets.SingleTi
                         _downloadedBooks.fold<double>(0, (sum, book) => sum + book.fileSize / (1024 * 1024))
                             .toStringAsFixed(1) + ' MB total',
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: colorScheme.onSurface.withOpacity(0.6),
+                          color: colorScheme.onSurface.withValues(alpha:0.6),
                         ),
                       ),
                     ],
@@ -451,7 +449,7 @@ class _LibraryPageState extends widgets.State<LibraryPage> with widgets.SingleTi
                                 widgets.Icon(
                                   widgets.Icons.library_books_outlined,
                                   size: 64,
-                                  color: colorScheme.onSurface.withOpacity(0.3),
+                                  color: colorScheme.onSurface.withValues(alpha:0.3),
                                 ),
                                 const widgets.SizedBox(height: 16),
                                 widgets.Text(
@@ -459,7 +457,7 @@ class _LibraryPageState extends widgets.State<LibraryPage> with widgets.SingleTi
                                       ? 'No books downloaded yet' 
                                       : 'No books match your search',
                                   style: theme.textTheme.titleMedium?.copyWith(
-                                    color: colorScheme.onSurface.withOpacity(0.5),
+                                    color: colorScheme.onSurface.withValues(alpha:0.5),
                                   ),
                                 ),
                                 const widgets.SizedBox(height: 8),
@@ -468,7 +466,7 @@ class _LibraryPageState extends widgets.State<LibraryPage> with widgets.SingleTi
                                       ? 'Download some books to see them here' 
                                       : 'Try a different search term',
                                   style: theme.textTheme.bodyMedium?.copyWith(
-                                    color: colorScheme.onSurface.withOpacity(0.4),
+                                    color: colorScheme.onSurface.withValues(alpha:0.4),
                                   ),
                                 ),
                               ],

@@ -131,7 +131,6 @@ class _EpubReaderPageState extends State<EpubReaderPage> {
         _isLoading = false;
       });
     } catch (e) {
-      print('Error initializing EPUB controller: $e');
       setState(() {
         _isLoading = false;
       });
@@ -193,14 +192,12 @@ class _EpubReaderPageState extends State<EpubReaderPage> {
   }
 
   void _showTableOfContents() {
-    // TODO: Implement table of contents
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Table of Contents - Coming Soon')),
     );
   }
 
   void _showBookmarks() {
-    // TODO: Implement bookmarks
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Bookmarks - Coming Soon')),
     );
@@ -254,16 +251,13 @@ class _EpubReaderPageState extends State<EpubReaderPage> {
                   child: EpubView(
                     controller: _epubController,
                     onExternalLinkPressed: (href) {
-                      print('External link pressed: $href');
                     },
                     onDocumentLoaded: (document) {
-                      print('Document loaded: ${document.Title}');
                     },
                     onChapterChanged: (chapter) {
                       // print('Chapter changed: ${chapter?.Title}');
                     },
                     onDocumentError: (error) {
-                      print('Document error: $error');
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text('Error loading document: $error')),
                       );
@@ -280,7 +274,7 @@ class _EpubReaderPageState extends State<EpubReaderPage> {
                       ),
                       chapterDividerBuilder: (context) => Container(
                         height: 1,
-                        color: _textColor.withOpacity(0.2),
+                        color: _textColor.withValues(alpha:0.2),
                       ),
                       loaderBuilder: (context) => Center(
                         child: CircularProgressIndicator(color: _textColor),
@@ -299,7 +293,7 @@ class _EpubReaderPageState extends State<EpubReaderPage> {
                   color: colorScheme.surface,
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
+                      color: Colors.black.withValues(alpha:0.1),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
@@ -476,7 +470,7 @@ class _EpubReaderPageState extends State<EpubReaderPage> {
                         decoration: BoxDecoration(
                           color: _backgroundColor,
                           borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.grey.withOpacity(0.3)),
+                          border: Border.all(color: Colors.grey.withValues(alpha:0.3)),
                         ),
                         child: Text(
                           'Preview: The quick brown fox jumps over the lazy dog. This is how your text will appear with the current settings.',
@@ -498,9 +492,9 @@ class _EpubReaderPageState extends State<EpubReaderPage> {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: Colors.blue.withOpacity(0.1),
+                          color: Colors.blue.withValues(alpha:0.1),
                           borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.blue.withOpacity(0.3)),
+                          border: Border.all(color: Colors.blue.withValues(alpha:0.3)),
                         ),
                         child: Row(
                           children: [
@@ -525,9 +519,9 @@ class _EpubReaderPageState extends State<EpubReaderPage> {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: Colors.amber.withOpacity(0.1),
+                          color: Colors.amber.withValues(alpha:0.1),
                           borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.amber.withOpacity(0.3)),
+                          border: Border.all(color: Colors.amber.withValues(alpha:0.3)),
                         ),
                         child: Row(
                           children: [

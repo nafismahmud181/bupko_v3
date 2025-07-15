@@ -24,7 +24,7 @@ class CategoryBooksPage extends StatelessWidget {
           preferredSize: const Size.fromHeight(1),
           child: Container(
             height: 1,
-            color: colorScheme.outline.withOpacity(0.08),
+            color: colorScheme.outline.withValues(alpha:0.08),
           ),
         ),
       ),
@@ -47,7 +47,7 @@ class CategoryBooksPage extends StatelessWidget {
                   Icon(
                     Icons.error_outline,
                     size: 64,
-                    color: colorScheme.error.withOpacity(0.7),
+                    color: colorScheme.error.withValues(alpha:0.7),
                   ),
                   const SizedBox(height: 16),
                   Text(
@@ -70,13 +70,13 @@ class CategoryBooksPage extends StatelessWidget {
                   Icon(
                     Icons.book_outlined,
                     size: 64,
-                    color: colorScheme.outline.withOpacity(0.4),
+                    color: colorScheme.outline.withValues(alpha:0.4),
                   ),
                   const SizedBox(height: 16),
                   Text(
                     'No books found',
                     style: TextStyle(
-                      color: colorScheme.onBackground.withOpacity(0.7),
+                      color: colorScheme.onBackground.withValues(alpha:0.7),
                       fontSize: 18,
                       fontWeight: FontWeight.w500,
                     ),
@@ -85,7 +85,7 @@ class CategoryBooksPage extends StatelessWidget {
                   Text(
                     'Books in this category will appear here',
                     style: TextStyle(
-                      color: colorScheme.onBackground.withOpacity(0.5),
+                      color: colorScheme.onBackground.withValues(alpha:0.5),
                       fontSize: 14,
                     ),
                   ),
@@ -139,7 +139,7 @@ class _BookCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(theme.brightness == Brightness.dark ? 0.12 : 0.05),
+            color: Colors.black.withValues(alpha:theme.brightness == Brightness.dark ? 0.12 : 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -203,7 +203,7 @@ class _BookCard extends StatelessWidget {
                       if (book.authorName != null && book.authorName!.isNotEmpty)
                         Text(
                           book.authorName!,
-                          style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurface.withOpacity(0.7), fontWeight: FontWeight.w500),
+                          style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurface.withValues(alpha:0.7), fontWeight: FontWeight.w500),
                         ),
                     ],
                   ),
@@ -211,7 +211,7 @@ class _BookCard extends StatelessWidget {
                 const SizedBox(width: 12),
                 Icon(
                   Icons.arrow_forward_ios,
-                  color: colorScheme.outline.withOpacity(0.4),
+                  color: colorScheme.outline.withValues(alpha:0.4),
                   size: 16,
                 ),
               ],

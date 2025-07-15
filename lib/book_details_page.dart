@@ -3,7 +3,7 @@ import 'database_helper.dart';
 import 'package:dio/dio.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
-import 'epub_reader_page.dart'; // Import the new EPUB reader page
+import 'epub_reader_page.dart';
 
 class BookDetailsPage extends widgets.StatefulWidget {
   final Book book;
@@ -39,20 +39,14 @@ class _BookDetailsPageState extends widgets.State<BookDetailsPage> with widgets.
       final dir = await getApplicationDocumentsDirectory();
       final savePath = '${dir.path}/${book.title.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_')}.${ext ?? 'file'}';
       final file = File(savePath);
-      print('Checking if book exists: $savePath');
-      print('Book title: ${book.title}');
-      print('Extension: $ext');
       if (await file.exists()) {
-        print('Book exists! Setting _isBookDownloaded to true');
         setState(() {
           _isBookDownloaded = true;
           _localFilePath = savePath;
         });
       } else {
-        print('Book does not exist');
       }
     } else {
-      print('No download URL or extension found');
     }
   }
 
@@ -172,7 +166,6 @@ class _BookDetailsPageState extends widgets.State<BookDetailsPage> with widgets.
             throw Exception('File does not exist');
           }
         } catch (e) {
-          print('Error opening EPUB: $e');
           widgets.ScaffoldMessenger.of(context).showSnackBar(
             widgets.SnackBar(
               content: widgets.Text('Failed to open EPUB: $e'),
@@ -249,7 +242,7 @@ class _BookDetailsPageState extends widgets.State<BookDetailsPage> with widgets.
               const widgets.SizedBox(height: 6),
               widgets.Text(
                 book.authorName!,
-                style: theme.textTheme.bodyMedium?.copyWith(color: colorScheme.onSurface.withOpacity(0.7), fontWeight: widgets.FontWeight.w500),
+                style: theme.textTheme.bodyMedium?.copyWith(color: colorScheme.onSurface.withValues(alpha:0.7), fontWeight: widgets.FontWeight.w500),
                 textAlign: widgets.TextAlign.center,
               ),
             ],
@@ -275,7 +268,7 @@ class _BookDetailsPageState extends widgets.State<BookDetailsPage> with widgets.
                 borderRadius: widgets.BorderRadius.circular(12),
                 boxShadow: [
                   widgets.BoxShadow(
-                    color: widgets.Colors.black.withOpacity(0.03),
+                    color: widgets.Colors.black.withValues(alpha:0.03),
                     blurRadius: 4,
                     offset: const widgets.Offset(0, 2),
                   ),
@@ -299,7 +292,7 @@ class _BookDetailsPageState extends widgets.State<BookDetailsPage> with widgets.
                 ],
               ),
             ),
-            widgets.Divider(height: 18, thickness: 1, color: colorScheme.outline.withOpacity(0.08)),
+            widgets.Divider(height: 18, thickness: 1, color: colorScheme.outline.withValues(alpha:0.08)),
             // Tab Content
             widgets.Expanded(
               child: widgets.Container(
@@ -399,7 +392,7 @@ class _InfoColumn extends widgets.StatelessWidget {
         const widgets.SizedBox(height: 4),
         widgets.Text(
           label,
-          style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurface.withOpacity(0.7)),
+          style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurface.withValues(alpha:0.7)),
         ),
       ],
     );
@@ -414,7 +407,7 @@ class _VerticalDivider extends widgets.StatelessWidget {
       margin: const widgets.EdgeInsets.symmetric(horizontal: 12),
       height: 32,
       width: 1.5,
-      color: colorScheme.outline.withOpacity(0.15),
+      color: colorScheme.outline.withValues(alpha:0.15),
     );
   }
 }
