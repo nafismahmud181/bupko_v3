@@ -73,6 +73,7 @@ class _LibraryPageState extends widgets.State<LibraryPage> with widgets.SingleTi
       // Sort by last modified date (newest first)
       books.sort((a, b) => b.lastModified.compareTo(a.lastModified));
       
+      if (!mounted) return;
       setState(() {
         _downloadedBooks = books;
         _isLoading = false;
@@ -80,6 +81,7 @@ class _LibraryPageState extends widgets.State<LibraryPage> with widgets.SingleTi
       
       _animationController.forward();
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _isLoading = false;
       });
@@ -93,7 +95,7 @@ class _LibraryPageState extends widgets.State<LibraryPage> with widgets.SingleTi
   }
 
   String _formatFileSize(int bytes) {
-    if (bytes < 1024) return '${bytes} B';
+    if (bytes < 1024) return '$bytes B';
     if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
     return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
   }
@@ -120,6 +122,7 @@ class _LibraryPageState extends widgets.State<LibraryPage> with widgets.SingleTi
     try {
       final file = File(book.filePath);
       if (!await file.exists()) {
+        if (!mounted) return;
         widgets.ScaffoldMessenger.of(context).showSnackBar(
           widgets.SnackBar(
             content: widgets.Text('File not found: ${book.title}'),
@@ -130,6 +133,7 @@ class _LibraryPageState extends widgets.State<LibraryPage> with widgets.SingleTi
       }
 
       if (book.fileType == 'epub') {
+        if (!mounted) return;
         widgets.Navigator.push(
           context,
           widgets.MaterialPageRoute(
@@ -140,6 +144,7 @@ class _LibraryPageState extends widgets.State<LibraryPage> with widgets.SingleTi
           ),
         );
       } else {
+        if (!mounted) return;
         widgets.ScaffoldMessenger.of(context).showSnackBar(
           widgets.SnackBar(
             content: widgets.Text('Opening ${book.fileType.toUpperCase()} file...'),
@@ -147,6 +152,7 @@ class _LibraryPageState extends widgets.State<LibraryPage> with widgets.SingleTi
         );
       }
     } catch (e) {
+      if (!mounted) return;
       widgets.ScaffoldMessenger.of(context).showSnackBar(
         widgets.SnackBar(
           content: widgets.Text('Error opening book: $e'),
@@ -161,6 +167,7 @@ class _LibraryPageState extends widgets.State<LibraryPage> with widgets.SingleTi
       final file = File(book.filePath);
       if (await file.exists()) {
         await file.delete();
+        if (!mounted) return;
         setState(() {
           _downloadedBooks.remove(book);
         });
@@ -171,6 +178,7 @@ class _LibraryPageState extends widgets.State<LibraryPage> with widgets.SingleTi
         );
       }
     } catch (e) {
+      if (!mounted) return;
       widgets.ScaffoldMessenger.of(context).showSnackBar(
         widgets.SnackBar(
           content: widgets.Text('Error deleting book: $e'),
@@ -349,7 +357,7 @@ class _LibraryPageState extends widgets.State<LibraryPage> with widgets.SingleTi
     final colorScheme = theme.colorScheme;
     
     return widgets.Scaffold(
-      backgroundColor: colorScheme.background,
+      backgroundColor: colorScheme.surface,
       appBar: widgets.AppBar(
         title: widgets.Text(
           'My Library',
@@ -430,8 +438,8 @@ class _LibraryPageState extends widgets.State<LibraryPage> with widgets.SingleTi
                       ),
                       const widgets.Spacer(),
                       widgets.Text(
-                        _downloadedBooks.fold<double>(0, (sum, book) => sum + book.fileSize / (1024 * 1024))
-                            .toStringAsFixed(1) + ' MB total',
+                        '${_downloadedBooks.fold<double>(0, (sum, book) => sum + book.fileSize / (1024 * 1024))
+                            .toStringAsFixed(1)} MB total',
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: colorScheme.onSurface.withValues(alpha:0.6),
                         ),

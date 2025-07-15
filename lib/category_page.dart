@@ -23,7 +23,7 @@ class _CategoryPageState extends State<CategoryPage> {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     return Scaffold(
-      backgroundColor: colorScheme.background,
+      backgroundColor: colorScheme.surface,
       appBar: AppBar(
         title: const Text(
           'Categories',
@@ -32,8 +32,8 @@ class _CategoryPageState extends State<CategoryPage> {
             fontSize: 24,
           ),
         ),
-        backgroundColor: theme.appBarTheme.backgroundColor ?? colorScheme.background,
-        foregroundColor: theme.appBarTheme.foregroundColor ?? colorScheme.onBackground,
+        backgroundColor: theme.appBarTheme.backgroundColor ?? colorScheme.surface,
+        foregroundColor: theme.appBarTheme.foregroundColor ?? colorScheme.onSurface,
         elevation: 0,
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
@@ -91,7 +91,7 @@ class _CategoryPageState extends State<CategoryPage> {
                   Text(
                     'No categories found',
                     style: TextStyle(
-                      color: colorScheme.onBackground.withValues(alpha: 0.7),
+                      color: colorScheme.onSurface.withValues(alpha: 0.7),
                       fontSize: 18,
                       fontWeight: FontWeight.w500,
                     ),
@@ -100,7 +100,7 @@ class _CategoryPageState extends State<CategoryPage> {
                   Text(
                     'Categories will appear here when added',
                     style: TextStyle(
-                      color: colorScheme.onBackground.withValues(alpha: 0.5),
+                      color: colorScheme.onSurface.withValues(alpha: 0.5),
                       fontSize: 14,
                     ),
                   ),

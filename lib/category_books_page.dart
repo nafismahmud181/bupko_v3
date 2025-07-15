@@ -11,14 +11,14 @@ class CategoryBooksPage extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     return Scaffold(
-      backgroundColor: colorScheme.background,
+      backgroundColor: colorScheme.surface,
       appBar: AppBar(
         title: Text(
           category.name,
           style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
         ),
-        backgroundColor: theme.appBarTheme.backgroundColor ?? colorScheme.background,
-        foregroundColor: theme.appBarTheme.foregroundColor ?? colorScheme.onBackground,
+        backgroundColor: theme.appBarTheme.backgroundColor ?? colorScheme.surface,
+        foregroundColor: theme.appBarTheme.foregroundColor ?? colorScheme.onSurface,
         elevation: 0,
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
@@ -76,7 +76,7 @@ class CategoryBooksPage extends StatelessWidget {
                   Text(
                     'No books found',
                     style: TextStyle(
-                      color: colorScheme.onBackground.withValues(alpha:0.7),
+                      color: colorScheme.onSurface.withValues(alpha:0.7),
                       fontSize: 18,
                       fontWeight: FontWeight.w500,
                     ),
@@ -85,7 +85,7 @@ class CategoryBooksPage extends StatelessWidget {
                   Text(
                     'Books in this category will appear here',
                     style: TextStyle(
-                      color: colorScheme.onBackground.withValues(alpha:0.5),
+                      color: colorScheme.onSurface.withValues(alpha:0.5),
                       fontSize: 14,
                     ),
                   ),
@@ -159,7 +159,7 @@ class _BookCard extends StatelessWidget {
                   height: 80,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(8),
-                    color: colorScheme.surfaceVariant,
+                    color: colorScheme.surfaceContainerHighest,
                   ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(8),
