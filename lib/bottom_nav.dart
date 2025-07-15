@@ -17,9 +17,8 @@ class _BottomNavState extends State<BottomNav> {
   final List<Widget> _pages = [
     const HomePage(),
     const CategoryPage(),
-    const LibraryPage(), // Replace with LibraryPage()
+    const LibraryPage(),
     const SettingPage(),
-    // Placeholder(), // Replace with ProfilePage()
   ];
 
   @override
@@ -27,33 +26,41 @@ class _BottomNavState extends State<BottomNav> {
     final navProvider = Provider.of<BottomNavProvider>(context);
     final selectedIndex = navProvider.selectedIndex;
 
-    return WillPopScope(
-      onWillPop: () async {
+    return PopScope(
+      canPop: false, // Always handle the pop manually
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        
+        // If not on home page, go to home page first
         if (selectedIndex != 0) {
           navProvider.setIndex(0);
-          return false;
-        } else {
-          final shouldExit = await showDialog<bool>(
-                context: context,
-                builder: (context) {
-                  return AlertDialog(
-                    title: const Text('Exit App'),
-                    content: const Text('Are you sure you want to leave?'),
-                    actions: <Widget>[
-                      TextButton(
-                        onPressed: () => Navigator.of(context).pop(false),
-                        child: const Text('No'),
-                      ),
-                      TextButton(
-                        onPressed: () => Navigator.of(context).pop(true),
-                        child: const Text('Yes'),
-                      ),
-                    ],
-                  );
-                },
-              ) ??
-              false;
-          return shouldExit;
+          return;
+        }
+        
+        // If on home page, show exit dialog
+        final shouldExit = await showDialog<bool>(
+              context: context,
+              builder: (context) {
+                return AlertDialog(
+                  title: const Text('Exit App'),
+                  content: const Text('Are you sure you want to leave?'),
+                  actions: <Widget>[
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(false),
+                      child: const Text('No'),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(true),
+                      child: const Text('Yes'),
+                    ),
+                  ],
+                );
+              },
+            ) ??
+            false;
+            
+        if (shouldExit && mounted) {
+          Navigator.of(context).maybePop();
         }
       },
       child: Scaffold(
@@ -120,4 +127,4 @@ class _BottomNavState extends State<BottomNav> {
       ),
     );
   }
-} 
+}
