@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'main.dart';
+import 'login_page.dart';
 
 class SettingPage extends StatefulWidget {
   const SettingPage({super.key});
@@ -584,7 +585,10 @@ class _SettingPageState extends State<SettingPage> with TickerProviderStateMixin
                 navigator.pop();
                 await FirebaseAuth.instance.signOut();
                 if (mounted) {
-                  navigator.pop();
+                  navigator.pushAndRemoveUntil(
+                    MaterialPageRoute(builder: (context) => const LoginPage()),
+                    (route) => false,
+                  );
                 }
               },
               style: TextButton.styleFrom(
