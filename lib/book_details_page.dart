@@ -31,15 +31,16 @@ class _BookDetailsPageState extends widgets.State<BookDetailsPage> with widgets.
     final book = widget.book;
     String? url = book.epubDownloadUrl ?? book.pdfDownloadUrl ?? book.txtDownloadUrl;
     String? ext;
-    if (book.epubDownloadUrl != null) ext = 'epub';
-    else if (book.pdfDownloadUrl != null) ext = 'pdf';
-    else if (book.txtDownloadUrl != null) ext = 'txt';
+    if (book.epubDownloadUrl != null) { ext = 'epub'; }
+    else if (book.pdfDownloadUrl != null) { ext = 'pdf'; }
+    else if (book.txtDownloadUrl != null) { ext = 'txt'; }
     
     if (url != null && ext != null) {
       final dir = await getApplicationDocumentsDirectory();
-      final savePath = '${dir.path}/${book.title.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_')}.${ext ?? 'file'}';
+      final savePath = '${dir.path}/${book.title.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_')}.$ext';
       final file = File(savePath);
       if (await file.exists()) {
+        if (!mounted) return;
         setState(() {
           _isBookDownloaded = true;
           _localFilePath = savePath;
@@ -54,11 +55,12 @@ class _BookDetailsPageState extends widgets.State<BookDetailsPage> with widgets.
     if (_localFilePath != null) {
       final book = widget.book;
       String? ext;
-      if (book.epubDownloadUrl != null) ext = 'epub';
-      else if (book.pdfDownloadUrl != null) ext = 'pdf';
-      else if (book.txtDownloadUrl != null) ext = 'txt';
+      if (book.epubDownloadUrl != null) { ext = 'epub'; }
+      else if (book.pdfDownloadUrl != null) { ext = 'pdf'; }
+      else if (book.txtDownloadUrl != null) { ext = 'txt'; }
       
       if (ext == 'epub') {
+        if (!mounted) return;
         widgets.Navigator.push(
           context,
           widgets.MaterialPageRoute(
@@ -69,6 +71,7 @@ class _BookDetailsPageState extends widgets.State<BookDetailsPage> with widgets.
           ),
         );
       } else {
+        if (!mounted) return;
         widgets.ScaffoldMessenger.of(context).showSnackBar(
           widgets.SnackBar(content: widgets.Text('Opening $ext file...')),
         );
@@ -86,11 +89,12 @@ class _BookDetailsPageState extends widgets.State<BookDetailsPage> with widgets.
     final book = widget.book;
     String? url = book.epubDownloadUrl ?? book.pdfDownloadUrl ?? book.txtDownloadUrl;
     String? ext;
-    if (book.epubDownloadUrl != null) ext = 'epub';
-    else if (book.pdfDownloadUrl != null) ext = 'pdf';
-    else if (book.txtDownloadUrl != null) ext = 'txt';
+    if (book.epubDownloadUrl != null) { ext = 'epub'; }
+    else if (book.pdfDownloadUrl != null) { ext = 'pdf'; }
+    else if (book.txtDownloadUrl != null) { ext = 'txt'; }
     
     if (url == null) {
+      if (!mounted) return;
       widgets.ScaffoldMessenger.of(context).showSnackBar(
         const widgets.SnackBar(content: widgets.Text('No downloadable file available for this book.')),
       );
@@ -98,11 +102,12 @@ class _BookDetailsPageState extends widgets.State<BookDetailsPage> with widgets.
     }
     
     final dir = await getApplicationDocumentsDirectory();
-    final savePath = '${dir.path}/${book.title.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_')}.${ext ?? 'file'}';
+    final savePath = '${dir.path}/${book.title.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_')}.$ext';
     final file = File(savePath);
     if (await file.exists()) {
       // File already exists, open directly
       if (ext == 'epub') {
+        if (!mounted) return;
         widgets.Navigator.push(
           context,
           widgets.MaterialPageRoute(
@@ -115,6 +120,7 @@ class _BookDetailsPageState extends widgets.State<BookDetailsPage> with widgets.
         return;
       }
       // You can add logic for PDF/TXT if needed
+      if (!mounted) return;
       widgets.ScaffoldMessenger.of(context).showSnackBar(
         widgets.SnackBar(content: widgets.Text('Book already downloaded.')),
       );
@@ -139,6 +145,7 @@ class _BookDetailsPageState extends widgets.State<BookDetailsPage> with widgets.
         },
       );
       
+      if (!mounted) return;
       setState(() {
         _downloading = false;
         _isBookDownloaded = true;
@@ -153,6 +160,7 @@ class _BookDetailsPageState extends widgets.State<BookDetailsPage> with widgets.
       if (ext == 'epub') {
         try {
           if (await file.exists()) {
+            if (!mounted) return;
             widgets.Navigator.push(
               context,
               widgets.MaterialPageRoute(
@@ -166,6 +174,7 @@ class _BookDetailsPageState extends widgets.State<BookDetailsPage> with widgets.
             throw Exception('File does not exist');
           }
         } catch (e) {
+          if (!mounted) return;
           widgets.ScaffoldMessenger.of(context).showSnackBar(
             widgets.SnackBar(
               content: widgets.Text('Failed to open EPUB: $e'),
@@ -175,6 +184,7 @@ class _BookDetailsPageState extends widgets.State<BookDetailsPage> with widgets.
         }
       }
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _downloading = false;
       });
@@ -191,7 +201,7 @@ class _BookDetailsPageState extends widgets.State<BookDetailsPage> with widgets.
     final colorScheme = theme.colorScheme;
     
     return widgets.Scaffold(
-      backgroundColor: colorScheme.background,
+      backgroundColor: colorScheme.surface,
       appBar: widgets.AppBar(
         backgroundColor: widgets.Colors.transparent,
         elevation: 0,
@@ -226,7 +236,7 @@ class _BookDetailsPageState extends widgets.State<BookDetailsPage> with widgets.
                     : widgets.Container(
                         width: 180,
                         height: 240,
-                        color: colorScheme.surfaceVariant,
+                        color: colorScheme.surfaceContainerHighest,
                         child: widgets.Icon(widgets.Icons.book, size: 64, color: colorScheme.outline),
                       ),
               ),
@@ -284,7 +294,7 @@ class _BookDetailsPageState extends widgets.State<BookDetailsPage> with widgets.
                 ),
                 dividerColor: widgets.Colors.transparent,
                 indicatorSize: widgets.TabBarIndicatorSize.tab,
-                overlayColor: widgets.MaterialStateProperty.all(widgets.Colors.transparent),
+                overlayColor: widgets.WidgetStateProperty.all(widgets.Colors.transparent),
                 tabs: const [
                   widgets.Tab(child: widgets.Align(alignment: widgets.Alignment.center, child: widgets.Text('Description'))),
                   widgets.Tab(child: widgets.Align(alignment: widgets.Alignment.center, child: widgets.Text('Reviews'))),
@@ -362,7 +372,7 @@ class _BookDetailsPageState extends widgets.State<BookDetailsPage> with widgets.
               widgets.LinearProgressIndicator(
                 value: _downloadProgress > 0 ? _downloadProgress : null,
                 minHeight: 6,
-                backgroundColor: colorScheme.surfaceVariant,
+                backgroundColor: colorScheme.surfaceContainerHighest,
                 valueColor: widgets.AlwaysStoppedAnimation<widgets.Color>(colorScheme.primary),
               ),
             ],
