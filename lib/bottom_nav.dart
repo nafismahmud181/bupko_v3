@@ -1,3 +1,4 @@
+import 'package:bupko_v3/library_page.dart';
 import 'package:bupko_v3/setting_page.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -16,7 +17,7 @@ class _BottomNavState extends State<BottomNav> {
   final List<Widget> _pages = [
     const HomePage(),
     const CategoryPage(),
-    Placeholder(), // Replace with LibraryPage()
+    const LibraryPage(), // Replace with LibraryPage()
     const SettingPage(),
     // Placeholder(), // Replace with ProfilePage()
   ];
