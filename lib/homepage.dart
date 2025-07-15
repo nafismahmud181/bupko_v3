@@ -81,14 +81,6 @@ class _HomePageState extends State<HomePage> {
           Container(
             decoration: BoxDecoration(
               color: theme.colorScheme.surface,
-              borderRadius: BorderRadius.circular(24),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.04),
-                  blurRadius: 12,
-                  offset: Offset(0, 4),
-                ),
-              ],
             ),
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
             child: Row(

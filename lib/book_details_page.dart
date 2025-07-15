@@ -2,9 +2,8 @@ import 'package:flutter/material.dart' as widgets;
 import 'database_helper.dart';
 import 'package:dio/dio.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:epub_view/epub_view.dart';
 import 'dart:io';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'epub_reader_page.dart'; // Import the new EPUB reader page
 
 class BookDetailsPage extends widgets.StatefulWidget {
   final Book book;
@@ -69,7 +68,7 @@ class _BookDetailsPageState extends widgets.State<BookDetailsPage> with widgets.
         widgets.Navigator.push(
           context,
           widgets.MaterialPageRoute(
-            builder: (context) => EpubReaderScreen(
+            builder: (context) => EpubReaderPage(
               filePath: _localFilePath!,
               bookTitle: book.title,
             ),
@@ -113,7 +112,7 @@ class _BookDetailsPageState extends widgets.State<BookDetailsPage> with widgets.
         widgets.Navigator.push(
           context,
           widgets.MaterialPageRoute(
-            builder: (context) => EpubReaderScreen(
+            builder: (context) => EpubReaderPage(
               filePath: savePath,
               bookTitle: book.title,
             ),
@@ -156,14 +155,14 @@ class _BookDetailsPageState extends widgets.State<BookDetailsPage> with widgets.
         widgets.SnackBar(content: widgets.Text('Downloaded to $savePath')),
       );
       
-      // Open EPUB with epub_view
+      // Open EPUB with the new reader page
       if (ext == 'epub') {
         try {
           if (await file.exists()) {
             widgets.Navigator.push(
               context,
               widgets.MaterialPageRoute(
-                builder: (context) => EpubReaderScreen(
+                builder: (context) => EpubReaderPage(
                   filePath: savePath,
                   bookTitle: book.title,
                 ),
@@ -377,273 +376,6 @@ class _BookDetailsPageState extends widgets.State<BookDetailsPage> with widgets.
             const widgets.SizedBox(height: 18),
           ],
         ),
-      ),
-    );
-  }
-}
-
-// Custom EPUB Reader Screen using epub_view
-class EpubReaderScreen extends widgets.StatefulWidget {
-  final String filePath;
-  final String bookTitle;
-  
-  const EpubReaderScreen({
-    widgets.Key? key,
-    required this.filePath,
-    required this.bookTitle,
-  }) : super(key: key);
-
-  @override
-  widgets.State<EpubReaderScreen> createState() => _EpubReaderScreenState();
-}
-
-class _EpubReaderScreenState extends widgets.State<EpubReaderScreen> {
-  late EpubController _epubController;
-  bool _isLoading = true;
-  bool _showSettings = false;
-  
-  // Font settings
-  double _fontSize = 16.0;
-  String _fontFamily = 'serif';
-  final List<String> _fontFamilies = [
-    'serif',
-    'sans-serif',
-    'monospace',
-    'Georgia',
-    'Times New Roman',
-    'Arial',
-    'Helvetica',
-    'Courier New',
-  ];
-
-  @override
-  void initState() {
-    super.initState();
-    _loadFontSettings();
-    _initEpubController();
-  }
-
-  Future<void> _loadFontSettings() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _fontSize = prefs.getDouble('fontSize') ?? 16.0;
-      _fontFamily = prefs.getString('fontFamily') ?? 'serif';
-    });
-  }
-
-  Future<void> _saveFontSettings() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setDouble('fontSize', _fontSize);
-    await prefs.setString('fontFamily', _fontFamily);
-  }
-
-  void _initEpubController() async {
-    try {
-      _epubController = EpubController(
-        document: EpubDocument.openFile(File(widget.filePath)),
-      );
-      setState(() {
-        _isLoading = false;
-      });
-    } catch (e) {
-      print('Error initializing EPUB controller: $e');
-      setState(() {
-        _isLoading = false;
-      });
-      widgets.ScaffoldMessenger.of(context).showSnackBar(
-        widgets.SnackBar(content: widgets.Text('Failed to open EPUB: $e')),
-      );
-    }
-  }
-
-  @override
-  void dispose() {
-    _epubController.dispose();
-    super.dispose();
-  }
-
-  void _toggleSettings() {
-    setState(() {
-      _showSettings = !_showSettings;
-    });
-  }
-
-  void _updateFontSize(double size) {
-    setState(() {
-      _fontSize = size;
-    });
-    _saveFontSettings();
-  }
-
-  void _updateFontFamily(String family) {
-    setState(() {
-      _fontFamily = family;
-    });
-    _saveFontSettings();
-  }
-
-  @override
-  widgets.Widget build(widgets.BuildContext context) {
-    final theme = widgets.Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    
-    return widgets.Scaffold(
-      backgroundColor: colorScheme.background,
-      appBar: widgets.AppBar(
-        backgroundColor: colorScheme.surface,
-        elevation: 1,
-        title: _isLoading
-            ? widgets.Text(widget.bookTitle)
-            : EpubViewActualChapter(
-                controller: _epubController,
-                builder: (chapterValue) => widgets.Text(
-                  chapterValue?.chapter?.Title?.replaceAll('\n', '').trim() ?? 
-                  widget.bookTitle,
-                  style: theme.textTheme.titleMedium,
-                ),
-              ),
-        leading: widgets.IconButton(
-          icon: widgets.Icon(widgets.Icons.arrow_back, color: colorScheme.onSurface),
-          onPressed: () => widgets.Navigator.of(context).pop(),
-        ),
-        actions: [
-          widgets.IconButton(
-            icon: widgets.Icon(widgets.Icons.bookmark_border, color: colorScheme.onSurface),
-            onPressed: () {},
-          ),
-          widgets.IconButton(
-            icon: widgets.Icon(widgets.Icons.settings, color: colorScheme.onSurface),
-            onPressed: _toggleSettings,
-          ),
-        ],
-      ),
-      body: widgets.Stack(
-        children: [
-          _isLoading
-              ? const widgets.Center(child: widgets.CircularProgressIndicator())
-              : EpubView(
-                  controller: _epubController,
-                  onExternalLinkPressed: (href) {
-                    print('External link pressed: $href');
-                  },
-                  onDocumentLoaded: (document) {
-                    print('Document loaded: ${document.Title}');
-                  },
-                  onChapterChanged: (chapter) {
-                    // print('Chapter changed: ${chapter?.Title}');
-                  },
-                  onDocumentError: (error) {
-                    print('Document error: $error');
-                    widgets.ScaffoldMessenger.of(context).showSnackBar(
-                      widgets.SnackBar(content: widgets.Text('Error loading document: $error')),
-                    );
-                  },
-                ),
-          if (_showSettings)
-            widgets.Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              child: widgets.Container(
-                padding: const widgets.EdgeInsets.all(16),
-                decoration: widgets.BoxDecoration(
-                  color: colorScheme.surface,
-                  boxShadow: [
-                    widgets.BoxShadow(
-                      color: widgets.Colors.black.withOpacity(0.1),
-                      blurRadius: 8,
-                      offset: const widgets.Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: widgets.Column(
-                  crossAxisAlignment: widgets.CrossAxisAlignment.start,
-                  mainAxisSize: widgets.MainAxisSize.min,
-                  children: [
-                    widgets.Row(
-                      mainAxisAlignment: widgets.MainAxisAlignment.spaceBetween,
-                      children: [
-                        widgets.Text(
-                          'Reading Settings',
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: widgets.FontWeight.bold,
-                          ),
-                        ),
-                        widgets.IconButton(
-                          icon: widgets.Icon(widgets.Icons.close),
-                          onPressed: _toggleSettings,
-                        ),
-                      ],
-                    ),
-                    const widgets.SizedBox(height: 16),
-                    // Font Size Control
-                    widgets.Text(
-                      'Font Size: ${_fontSize.round()}',
-                      style: theme.textTheme.bodyMedium,
-                    ),
-                    widgets.Slider(
-                      value: _fontSize,
-                      min: 12.0,
-                      max: 24.0,
-                      divisions: 12,
-                      label: _fontSize.round().toString(),
-                      onChanged: _updateFontSize,
-                    ),
-                    const widgets.SizedBox(height: 16),
-                    // Font Family Control
-                    widgets.Text(
-                      'Font Family',
-                      style: theme.textTheme.bodyMedium,
-                    ),
-                    const widgets.SizedBox(height: 8),
-                    widgets.DropdownButtonFormField<String>(
-                      value: _fontFamily,
-                      decoration: widgets.InputDecoration(
-                        border: widgets.OutlineInputBorder(
-                          borderRadius: widgets.BorderRadius.circular(8),
-                        ),
-                        contentPadding: const widgets.EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 8,
-                        ),
-                      ),
-                      items: _fontFamilies.map((font) {
-                        return widgets.DropdownMenuItem(
-                          value: font,
-                          child: widgets.Text(
-                            font,
-                            style: widgets.TextStyle(fontFamily: font),
-                          ),
-                        );
-                      }).toList(),
-                      onChanged: (value) {
-                        if (value != null) {
-                          _updateFontFamily(value);
-                        }
-                      },
-                    ),
-                    const widgets.SizedBox(height: 16),
-                    // Preview Text
-                    widgets.Container(
-                      padding: const widgets.EdgeInsets.all(12),
-                      decoration: widgets.BoxDecoration(
-                        color: colorScheme.surfaceVariant,
-                        borderRadius: widgets.BorderRadius.circular(8),
-                      ),
-                      child: widgets.Text(
-                        'Preview: The quick brown fox jumps over the lazy dog.',
-                        style: widgets.TextStyle(
-                          fontSize: _fontSize,
-                          fontFamily: _fontFamily,
-                          color: colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-        ],
       ),
     );
   }
