@@ -207,6 +207,7 @@ class DatabaseHelper {
       SELECT books.* FROM books
       INNER JOIN book_categories ON books.id = book_categories.book_id
       WHERE book_categories.category_id = ?
+      ORDER BY RANDOM()
       LIMIT ?
     ''', [categoryId, limit]);
     return maps.map((map) => Book.fromMap(map)).toList();
