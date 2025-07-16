@@ -106,7 +106,21 @@ class _HomePageState extends State<HomePage> {
       title: Row(
         children: [
           const SizedBox(width: 8),
-          Icon(Icons.menu_book_rounded, color: theme.colorScheme.primary, size: 28),
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(8),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha:0.06),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Image.asset('assets/logo/logo.png', fit: BoxFit.contain),
+          ),
           const SizedBox(width: 10),
           Text(
             'Bupko',

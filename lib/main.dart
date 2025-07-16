@@ -5,6 +5,7 @@ import 'login_page.dart';
 import 'package:provider/provider.dart';
 import 'bottom_nav.dart';
 import 'bottom_nav_provider.dart';
+import 'splash_screen.dart';
 
 final ValueNotifier<ThemeMode> themeModeNotifier = ValueNotifier(ThemeMode.system);
 
@@ -43,7 +44,11 @@ class MyApp extends StatelessWidget {
             brightness: Brightness.dark,
           ),
           themeMode: mode,
-          home: const AuthGate(),
+          initialRoute: '/',
+          routes: {
+            '/': (context) => const SplashScreen(),
+            '/main': (context) => const AuthGate(),
+          },
         );
       },
     );
