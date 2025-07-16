@@ -20,12 +20,8 @@ class AppTheme {
         // Surface colors
         surface: Color(0xFFF8F9FA),
         onSurface: Color(0xFF1A1A2E),
-        surfaceVariant: Color(0xFFE3F2FD),
+        surfaceContainerHighest: Color(0xFFE3F2FD),
         onSurfaceVariant: Color(0xFF1A1A2E),
-        
-        // Background colors
-        background: Color(0xFFF8F9FA),
-        onBackground: Color(0xFF1A1A2E),
         
         // Error colors
         error: Color(0xFFD32F2F),
@@ -106,12 +102,8 @@ class AppTheme {
         // Surface colors
         surface: Color(0xFF1A1A2E),
         onSurface: Colors.white,
-        surfaceVariant: Color(0xFF16213E),
+        surfaceContainerHighest: Color(0xFF16213E),
         onSurfaceVariant: Colors.white,
-        
-        // Background colors
-        background: Color(0xFF1A1A2E),
-        onBackground: Colors.white,
         
         // Error colors
         error: Color(0xFFEF5350),

@@ -156,36 +156,60 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget buildModernHeader(BuildContext context, {bool showLastDownloaded = true}) {
-    final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 18, 16, 0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Search Bar
-          GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const SearchPage()),
-              );
-            },
-            child: Container(
-              decoration: BoxDecoration(
-                color: theme.colorScheme.surfaceContainerHighest.withValues(alpha:0.5),
-                borderRadius: BorderRadius.circular(16),
+  final theme = Theme.of(context);
+  return Padding(
+    padding: const EdgeInsets.fromLTRB(16, 18, 16, 0),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Search Bar
+        GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const SearchPage()),
+            );
+          },
+          child: Container(
+            decoration: BoxDecoration(
+              color: theme.brightness == Brightness.light
+                  ? Colors.white
+                  : theme.colorScheme.surfaceVariant,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: theme.colorScheme.outline.withValues(alpha: 0.15),
+                width: 1,
               ),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              child: Row(
-                children: [
-                  Icon(Icons.search_rounded, color: theme.colorScheme.onSurface.withValues(alpha:0.5)),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Search...',
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: theme.brightness == Brightness.light ? 0.04 : 0.08),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.search_rounded,
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                  size: 20,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Search books, authors...',
                     style: TextStyle(
-                      color: theme.colorScheme.onSurface.withValues(alpha:0.5),
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
                       fontSize: 16,
                     ),
+                  ),
+                ),
+                Icon(
+                  Icons.tune_rounded,
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
+                  size: 18,
                   ),
                 ],
               ),
@@ -412,7 +436,7 @@ class _HomePageState extends State<HomePage> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.8),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -668,7 +692,7 @@ class _LastDownloadedBookCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: const Color.fromARGB(255, 255, 251, 1).withValues(alpha:0.08),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -719,7 +743,7 @@ class _LastDownloadedBookCard extends StatelessWidget {
                     padding: const EdgeInsets.only(top: 2.0),
                     child: Text(
                       book!.authorName!,
-                      style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurface.withOpacity(0.7)),
+                      style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurface.withValues(alpha:0.7)),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -737,7 +761,7 @@ class _LastDownloadedBookCard extends StatelessWidget {
                   children: [
                     Text('58%', style: theme.textTheme.bodySmall?.copyWith(color: Colors.amber, fontWeight: FontWeight.bold)),
                     const SizedBox(width: 4),
-                    Text('completed', style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurface.withOpacity(0.7))),
+                    Text('completed', style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurface.withValues(alpha:0.7))),
                   ],
                 ),
                 const SizedBox(height: 14),
