@@ -151,6 +151,7 @@ Future<void> _login() async {
 Future<void> _testFirebaseConnection() async {
   try {
     final user = FirebaseAuth.instance.currentUser;
+  // ignore: empty_catches
   } catch (e) {
   }
 }
