@@ -92,8 +92,8 @@ class _HomePageState extends State<HomePage> {
           _lastBookInfo = dbBook;
         });
       }
+    // ignore: empty_catches
     } catch (e) {
-      print('Error in _loadLastDownloadedBook: $e');
     }
   }
 

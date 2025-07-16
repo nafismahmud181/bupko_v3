@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart' as widgets;
 import 'database_helper.dart';
 import 'package:dio/dio.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 import 'dart:convert';
@@ -93,7 +94,7 @@ class _BookDetailsPageState extends widgets.State<BookDetailsPage> with widgets.
     if (book.epubDownloadUrl != null) { ext = 'epub'; }
     else if (book.pdfDownloadUrl != null) { ext = 'pdf'; }
     else if (book.txtDownloadUrl != null) { ext = 'txt'; }
-    
+
     if (url == null) {
       if (!mounted) return;
       widgets.ScaffoldMessenger.of(context).showSnackBar(
@@ -101,7 +102,7 @@ class _BookDetailsPageState extends widgets.State<BookDetailsPage> with widgets.
       );
       return;
     }
-    
+
     final dir = await getApplicationDocumentsDirectory();
     final savePath = '${dir.path}/${book.title.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_')}.$ext';
     final file = File(savePath);
@@ -127,83 +128,120 @@ class _BookDetailsPageState extends widgets.State<BookDetailsPage> with widgets.
       );
       return;
     }
-    
+
     setState(() {
       _downloading = true;
       _downloadProgress = 0.0;
     });
-    
-    try {
-      await Dio().download(
-        url,
-        savePath,
-        onReceiveProgress: (received, total) {
-          if (total != -1) {
-            setState(() {
-              _downloadProgress = received / total;
-            });
-          }
-        },
-      );
-      
-      if (!mounted) return;
+
+    final connectivity = await Connectivity().checkConnectivity();
+    if (connectivity == ConnectivityResult.none) {
       setState(() {
         _downloading = false;
-        _isBookDownloaded = true;
-        _localFilePath = savePath;
       });
-      
-      // Save mapping from file path to book ID
-      final mappingFile = File('${dir.path}/downloaded_books.json');
-      Map<String, dynamic> mapping = {};
-      if (await mappingFile.exists()) {
-        final content = await mappingFile.readAsString();
-        if (content.isNotEmpty) {
-          mapping = json.decode(content);
-        }
-      }
-      mapping[savePath] = book.id;
-      await mappingFile.writeAsString(json.encode(mapping));
-      
       widgets.ScaffoldMessenger.of(context).showSnackBar(
-        widgets.SnackBar(content: widgets.Text('Downloaded to $savePath')),
+        widgets.SnackBar(content: widgets.Text('No internet connection. Please check your network and try again.')),
       );
-      
-      // Open EPUB with the new reader page
-      if (ext == 'epub') {
-        try {
-          if (await file.exists()) {
-            if (!mounted) return;
-            widgets.Navigator.push(
-              context,
-              widgets.MaterialPageRoute(
-                builder: (context) => EpubReaderPage(
-                  filePath: savePath,
-                  bookTitle: book.title,
-                ),
-              ),
-            );
-          } else {
-            throw Exception('File does not exist');
-          }
-        } catch (e) {
-          if (!mounted) return;
+      return;
+    }
+
+    final dio = Dio();
+    int retries = 0;
+    const maxRetries = 3;
+    bool success = false;
+    while (retries < maxRetries && !success) {
+      try {
+        await dio.download(
+          url,
+          savePath,
+          onReceiveProgress: (received, total) {
+            if (total != -1) {
+              setState(() {
+                _downloadProgress = received / total;
+              });
+            }
+          },
+          options: Options(
+            receiveTimeout: const Duration(seconds: 30),
+            sendTimeout: const Duration(seconds: 30),
+          ),
+        );
+        success = true;
+      } on DioException catch (e) {
+        retries++;
+        if (retries >= maxRetries) {
+          // Clean up partial file
+          if (await file.exists()) await file.delete();
+          setState(() {
+            _downloading = false;
+          });
           widgets.ScaffoldMessenger.of(context).showSnackBar(
-            widgets.SnackBar(
-              content: widgets.Text('Failed to open EPUB: $e'),
-              backgroundColor: widgets.Colors.red,
+            widgets.SnackBar(content: widgets.Text('Download failed after $maxRetries attempts: ${e.message ?? e.toString()}')),
+          );
+          return;
+        }
+        await Future.delayed(const Duration(seconds: 2));
+      } catch (e) {
+        retries = maxRetries; // Don't retry on unknown errors
+        setState(() {
+          _downloading = false;
+        });
+        widgets.ScaffoldMessenger.of(context).showSnackBar(
+          widgets.SnackBar(content: widgets.Text('Download failed: ${e.toString()}')),
+        );
+        return;
+      }
+    }
+
+    if (!mounted) return;
+    setState(() {
+      _downloading = false;
+      _isBookDownloaded = true;
+      _localFilePath = savePath;
+    });
+
+    // Save mapping from file path to book ID
+    final mappingFile = File('${dir.path}/downloaded_books.json');
+    Map<String, dynamic> mapping = {};
+    if (await mappingFile.exists()) {
+      final content = await mappingFile.readAsString();
+      if (content.isNotEmpty) {
+        mapping = json.decode(content);
+      }
+    }
+    mapping[savePath] = book.id;
+    await mappingFile.writeAsString(json.encode(mapping));
+
+    widgets.ScaffoldMessenger.of(context).showSnackBar(
+      widgets.SnackBar(content: widgets.Text('Downloaded to $savePath')),
+    );
+
+    // Open EPUB with the new reader page
+    if (ext == 'epub') {
+      try {
+        if (await file.exists()) {
+          if (!mounted) return;
+          widgets.Navigator.push(
+            context,
+            widgets.MaterialPageRoute(
+              builder: (context) => EpubReaderPage(
+                filePath: savePath,
+                bookTitle: book.title,
+              ),
             ),
           );
+        } else {
+          throw Exception('File does not exist');
         }
+      } catch (e) {
+        if (!mounted) return;
+        widgets.ScaffoldMessenger.of(context).showSnackBar(
+          widgets.SnackBar(
+            content: widgets.Text('Failed to open EPUB: $e'),
+            backgroundColor: widgets.Colors.red,
+          ),
+        );
       }
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _downloading = false;
-      });
-      widgets.ScaffoldMessenger.of(context).showSnackBar(
-        widgets.SnackBar(content: widgets.Text('Download failed: $e')),
-      );
     }
   }
 
