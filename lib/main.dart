@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'bottom_nav.dart';
 import 'bottom_nav_provider.dart';
 import 'splash_screen.dart';
+import 'app_theme.dart';
 
 final ValueNotifier<ThemeMode> themeModeNotifier = ValueNotifier(ThemeMode.system);
 
@@ -33,16 +34,8 @@ class MyApp extends StatelessWidget {
         return MaterialApp(
           debugShowCheckedModeBanner: false,
           title: 'Ebook Library',
-          theme: ThemeData(
-            colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-            useMaterial3: true,
-            brightness: Brightness.light,
-          ),
-          darkTheme: ThemeData(
-            colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple, brightness: Brightness.dark),
-            useMaterial3: true,
-            brightness: Brightness.dark,
-          ),
+          theme: AppTheme.lightTheme,        // Use your custom light theme
+          darkTheme: AppTheme.darkTheme,     // Use your custom dark theme
           themeMode: mode,
           initialRoute: '/',
           routes: {
