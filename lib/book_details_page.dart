@@ -3,6 +3,7 @@ import 'database_helper.dart';
 import 'package:dio/dio.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
+import 'dart:convert';
 import 'epub_reader_page.dart';
 
 class BookDetailsPage extends widgets.StatefulWidget {
@@ -151,6 +152,18 @@ class _BookDetailsPageState extends widgets.State<BookDetailsPage> with widgets.
         _isBookDownloaded = true;
         _localFilePath = savePath;
       });
+      
+      // Save mapping from file path to book ID
+      final mappingFile = File('${dir.path}/downloaded_books.json');
+      Map<String, dynamic> mapping = {};
+      if (await mappingFile.exists()) {
+        final content = await mappingFile.readAsString();
+        if (content.isNotEmpty) {
+          mapping = json.decode(content);
+        }
+      }
+      mapping[savePath] = book.id;
+      await mappingFile.writeAsString(json.encode(mapping));
       
       widgets.ScaffoldMessenger.of(context).showSnackBar(
         widgets.SnackBar(content: widgets.Text('Downloaded to $savePath')),

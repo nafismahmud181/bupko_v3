@@ -4,6 +4,10 @@ import 'search_page.dart';
 import 'book_upload_form_page.dart';
 import 'book_details_page.dart';
 import 'category_books_page.dart';
+import 'package:path_provider/path_provider.dart';
+import 'dart:io';
+import 'epub_reader_page.dart';
+import 'dart:convert';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -14,11 +18,14 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   Future<List<CategoryWithBooks>>? _booksFuture;
+  DownloadedBook? _lastDownloadedBook;
+  Book? _lastBookInfo;
 
   @override
   void initState() {
     super.initState();
     _loadBooks();
+    _loadLastDownloadedBook();
   }
 
   void _loadBooks() {
@@ -32,92 +39,115 @@ class _HomePageState extends State<HomePage> {
     _loadBooks();
   }
 
-  @override
-  Widget build(BuildContext context) {
+  Future<void> _loadLastDownloadedBook() async {
+    try {
+      final dir = await getApplicationDocumentsDirectory();
+      final files = await dir.list().toList();
+      List<DownloadedBook> books = [];
+      for (final file in files) {
+        if (file is File) {
+          final fileName = file.path.split('/').last;
+          final extension = fileName.split('.').last.toLowerCase();
+          if (["epub", "pdf", "txt"].contains(extension)) {
+            final bookTitle = fileName.split('.').first.replaceAll('_', ' ');
+            final fileSize = await file.length();
+            final lastModified = await file.lastModified();
+            books.add(DownloadedBook(
+              title: bookTitle,
+              filePath: file.path,
+              fileSize: fileSize,
+              lastModified: lastModified,
+              fileType: extension,
+            ));
+          }
+        }
+      }
+      books.sort((a, b) => b.lastModified.compareTo(a.lastModified));
+      if (books.isNotEmpty) {
+        final last = books.first;
+        // Try to get book ID from mapping file
+        final mappingFile = File('${dir.path}/downloaded_books.json');
+        int? bookId;
+        if (await mappingFile.exists()) {
+          final content = await mappingFile.readAsString();
+          if (content.isNotEmpty) {
+            final mapping = json.decode(content);
+            if (mapping[last.filePath] != null) {
+              bookId = mapping[last.filePath] is int
+                ? mapping[last.filePath]
+                : int.tryParse(mapping[last.filePath].toString());
+            }
+          }
+        }
+        Book? dbBook;
+        if (bookId != null) {
+          final db = await DatabaseHelper().database;
+          final List<Map<String, dynamic>> maps = await db.query('books', where: 'id = ?', whereArgs: [bookId]);
+          if (maps.isNotEmpty) {
+            dbBook = Book.fromMap(maps.first);
+          }
+        }
+        setState(() {
+          _lastDownloadedBook = last;
+          _lastBookInfo = dbBook;
+        });
+      }
+    } catch (e) {
+      print('Error in _loadLastDownloadedBook: $e');
+    }
+  }
+
+  PreferredSizeWidget buildFixedAppBar(BuildContext context) {
     final theme = Theme.of(context);
-    
-    return Scaffold(
+    return AppBar(
       backgroundColor: theme.colorScheme.surface,
-      body: Column(
+      elevation: 0,
+      titleSpacing: 0,
+      title: Row(
         children: [
-          buildModernHeader(context),
-          Expanded(
-            child: RefreshIndicator(
-              onRefresh: _refreshDatabase,
-              child: FutureBuilder<List<CategoryWithBooks>>(
-                future: _booksFuture,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return _buildLoadingState();
-                  }
-                  
-                  if (snapshot.hasError) {
-                    return _buildErrorState(snapshot.error.toString());
-                  }
-                  
-                  if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                    return _buildEmptyState();
-                  }
-                  
-                  return _buildBooksList(snapshot.data!);
-                },
-              ),
+          const SizedBox(width: 8),
+          Icon(Icons.menu_book_rounded, color: theme.colorScheme.primary, size: 28),
+          const SizedBox(width: 10),
+          Text(
+            'Bupko',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 22,
+              color: theme.colorScheme.onSurface,
             ),
           ),
+          const Spacer(),
+          Stack(
+            children: [
+              Icon(Icons.notifications_none_rounded, size: 26, color: theme.colorScheme.onSurface),
+              Positioned(
+                right: 0,
+                top: 2,
+                child: Container(
+                  width: 10,
+                  height: 10,
+                  decoration: BoxDecoration(
+                    color: Colors.red,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: theme.colorScheme.surface, width: 1.5),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(width: 12),
         ],
       ),
-      floatingActionButton: _buildFloatingActionButton(context),
     );
   }
 
-  Widget buildModernHeader(BuildContext context) {
+  Widget buildModernHeader(BuildContext context, {bool showLastDownloaded = true}) {
     final theme = Theme.of(context);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 32, 16, 0),
+      padding: const EdgeInsets.fromLTRB(16, 18, 16, 0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header Row
-          Container(
-            decoration: BoxDecoration(
-              color: theme.colorScheme.surface,
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
-            child: Row(
-              children: [
-                Icon(Icons.menu_book_rounded, color: theme.colorScheme.primary, size: 32),
-                const SizedBox(width: 10),
-                Text(
-                  'Bupko',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 22,
-                    color: theme.colorScheme.onSurface,
-                  ),
-                ),
-                Spacer(),
-                Stack(
-                  children: [
-                    Icon(Icons.notifications_none_rounded, size: 28, color: theme.colorScheme.onSurface),
-                    Positioned(
-                      right: 0,
-                      top: 2,
-                      child: Container(
-                        width: 10,
-                        height: 10,
-                        decoration: BoxDecoration(
-                          color: Colors.red,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: theme.colorScheme.surface, width: 1.5),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 18),
           // Search Bar
           GestureDetector(
             onTap: () {
@@ -147,7 +177,7 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 18),
         ],
       ),
     );
@@ -274,7 +304,7 @@ class _HomePageState extends State<HomePage> {
               onPressed: () => Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => const BookUploadFormPage()),
-              ),
+              ).then((_) => _loadLastDownloadedBook()),
               icon: const Icon(Icons.upload_file_rounded),
               label: const Text('Upload Your First Book'),
               style: ElevatedButton.styleFrom(
@@ -293,6 +323,46 @@ class _HomePageState extends State<HomePage> {
   Widget _buildBooksList(List<CategoryWithBooks> categories) {
     return CustomScrollView(
       slivers: [
+        SliverToBoxAdapter(child: buildModernHeader(context, showLastDownloaded: false)),
+        if (_lastDownloadedBook != null)
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: _LastDownloadedBookCard(
+                book: _lastBookInfo,
+                downloaded: _lastDownloadedBook!,
+                onResume: () async {
+                  final file = File(_lastDownloadedBook!.filePath);
+                  if (await file.exists()) {
+                    if (_lastDownloadedBook!.fileType == 'epub') {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => EpubReaderPage(
+                            filePath: _lastDownloadedBook!.filePath,
+                            bookTitle: _lastDownloadedBook!.title,
+                          ),
+                        ),
+                      );
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Opening ${_lastDownloadedBook!.fileType.toUpperCase()} file...')),
+                      );
+                    }
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('File not found: ${_lastDownloadedBook!.title}')),
+                    );
+                  }
+                },
+                onRecap: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Recap feature coming soon!')),
+                  );
+                },
+              ),
+            ),
+          ),
         SliverPadding(
           padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
           sliver: SliverToBoxAdapter(
@@ -305,6 +375,14 @@ class _HomePageState extends State<HomePage> {
           delegate: SliverChildBuilderDelegate(
             (context, index) => ModernCategorySection(
               categoryWithBooks: categories[index],
+              onBookTap: (book) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => BookDetailsPage(book: book),
+                  ),
+                ).then((_) => _loadLastDownloadedBook());
+              },
             ),
             childCount: categories.length,
           ),
@@ -330,7 +408,7 @@ class _HomePageState extends State<HomePage> {
         onPressed: () => Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => const BookUploadFormPage()),
-        ),
+        ).then((_) => _loadLastDownloadedBook()),
         icon: const Icon(Icons.add_rounded),
         label: const Text('Add Book'),
         backgroundColor: Theme.of(context).colorScheme.primary,
@@ -342,14 +420,44 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Scaffold(
+      backgroundColor: theme.colorScheme.surface,
+      appBar: buildFixedAppBar(context),
+      body: RefreshIndicator(
+        onRefresh: _refreshDatabase,
+        child: FutureBuilder<List<CategoryWithBooks>>(
+          future: _booksFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return _buildLoadingState();
+            }
+            if (snapshot.hasError) {
+              return _buildErrorState(snapshot.error.toString());
+            }
+            if (!snapshot.hasData || snapshot.data!.isEmpty) {
+              return _buildEmptyState();
+            }
+            return _buildBooksList(snapshot.data!);
+          },
+        ),
+      ),
+      floatingActionButton: _buildFloatingActionButton(context),
+    );
+  }
 }
 
 class ModernCategorySection extends StatelessWidget {
   final CategoryWithBooks categoryWithBooks;
+  final void Function(Book)? onBookTap;
 
   const ModernCategorySection({
     super.key,
     required this.categoryWithBooks,
+    this.onBookTap,
   });
 
   @override
@@ -402,12 +510,7 @@ class ModernCategorySection extends StatelessWidget {
               itemBuilder: (context, index) {
                 final book = categoryWithBooks.books[index];
                 return GestureDetector(
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => BookDetailsPage(book: book),
-                    ),
-                  ),
+                  onTap: () => onBookTap?.call(book),
                   child: ModernBookCard(book: book),
                 );
               },
@@ -523,4 +626,180 @@ class ModernBookCard extends StatelessWidget {
       ),
     );
   }
+}
+
+class _LastDownloadedBookCard extends StatelessWidget {
+  final Book? book;
+  final DownloadedBook downloaded;
+  final VoidCallback onResume;
+  final VoidCallback onRecap;
+
+  const _LastDownloadedBookCard({
+    required this.book,
+    required this.downloaded,
+    required this.onResume,
+    required this.onRecap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.symmetric(vertical: 0),
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: book != null && book!.coverImageUrl != null && book!.coverImageUrl!.isNotEmpty
+                ? Image.network(
+                    book!.coverImageUrl!,
+                    width: 80,
+                    height: 110,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => _buildPlaceholder(),
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return Container(
+                        width: 80,
+                        height: 110,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[100],
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Center(
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      );
+                    },
+                  )
+                : _buildPlaceholder(),
+          ),
+          const SizedBox(width: 18),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  downloaded.title,
+                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                if (book != null && book!.authorName != null && book!.authorName!.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2.0),
+                    child: Text(
+                      book!.authorName!,
+                      style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurface.withOpacity(0.7)),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Text('Chapter 25', style: theme.textTheme.bodySmall),
+                    const SizedBox(width: 12),
+                    Text('Page 334', style: theme.textTheme.bodySmall),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Text('58%', style: theme.textTheme.bodySmall?.copyWith(color: Colors.amber, fontWeight: FontWeight.bold)),
+                    const SizedBox(width: 4),
+                    Text('completed', style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurface.withOpacity(0.7))),
+                  ],
+                ),
+                const SizedBox(height: 14),
+                Row(
+                  children: [
+                    ElevatedButton(
+                      onPressed: onResume,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: colorScheme.surface,
+                        foregroundColor: colorScheme.onSurface,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 10),
+                      ),
+                      child: const Text('Resume'),
+                    ),
+                    const SizedBox(width: 12),
+                    ElevatedButton(
+                      onPressed: onRecap,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.amber,
+                        foregroundColor: Colors.black,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 10),
+                      ),
+                      child: const Text('Recap'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPlaceholder() {
+    return Container(
+      width: 80,
+      height: 110,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Colors.grey[200]!,
+            Colors.grey[300]!,
+          ],
+        ),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: const Center(
+        child: Icon(
+          Icons.auto_stories_rounded,
+          size: 40,
+          color: Colors.grey,
+        ),
+      ),
+    );
+  }
+}
+
+class DownloadedBook {
+  final String title;
+  final String filePath;
+  final int fileSize;
+  final DateTime lastModified;
+  final String fileType;
+
+  DownloadedBook({
+    required this.title,
+    required this.filePath,
+    required this.fileSize,
+    required this.lastModified,
+    required this.fileType,
+  });
 }
