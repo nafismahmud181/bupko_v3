@@ -10,12 +10,15 @@ class SearchPage extends StatefulWidget {
   State<SearchPage> createState() => _SearchPageState();
 }
 
-class _SearchPageState extends State<SearchPage> {
+class _SearchPageState extends State<SearchPage> with AutomaticKeepAliveClientMixin {
   final TextEditingController _controller = TextEditingController();
   List<Book> _results = [];
   bool _loading = false;
   String _lastQuery = '';
   Timer? _debounce;
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {
@@ -60,11 +63,12 @@ class _SearchPageState extends State<SearchPage> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return Scaffold(
       appBar: AppBar(
         title: TextField(
           controller: _controller,
-          autofocus: true,
+          // autofocus: true, // Removed autofocus to prevent keyboard flicker
           decoration: const InputDecoration(
             hintText: 'Search books by title or author...',
             border: InputBorder.none,

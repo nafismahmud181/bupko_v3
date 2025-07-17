@@ -44,6 +44,15 @@ class MyApp extends StatelessWidget {
             '/': (context) => const SplashScreen(),
             '/main': (context) => const AuthGate(),
           },
+          builder: (context, child) {
+            return GestureDetector(
+              behavior: HitTestBehavior.translucent,
+              onTap: () {
+                FocusScope.of(context).unfocus();
+              },
+              child: child,
+            );
+          },
         );
       },
     );
