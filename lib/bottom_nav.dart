@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'homepage.dart';
 import 'category_page.dart';
 import 'bottom_nav_provider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class BottomNav extends StatefulWidget {
   const BottomNav({super.key});
@@ -14,17 +15,26 @@ class BottomNav extends StatefulWidget {
 }
 
 class _BottomNavState extends State<BottomNav> {
-  final List<Widget> _pages = [
-    const HomePage(),
-    const CategoryPage(),
-    const LibraryPage(),
-    const SettingPage(),
-  ];
+  late final List<Widget> _pages;
+
+  @override
+  void initState() {
+    super.initState();
+    print('BottomNav: initState called');
+    _pages = [
+      const HomePage(),
+      const CategoryPage(),
+      const LibraryPage(),
+      const SettingPage(),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
+    print('BottomNav: build called');
     final navProvider = Provider.of<BottomNavProvider>(context);
     final selectedIndex = navProvider.selectedIndex;
+    print('BottomNav: selectedIndex = $selectedIndex');
 
     return PopScope(
       canPop: false, // Always handle the pop manually

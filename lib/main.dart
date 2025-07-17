@@ -39,99 +39,81 @@ class MyApp extends StatelessWidget {
           theme: AppTheme.lightTheme,
           darkTheme: AppTheme.darkTheme,
           themeMode: mode,
-          home: const AppWrapper(),
+          initialRoute: '/',
+          routes: {
+            '/': (context) => const SplashScreen(),
+            '/main': (context) => const AuthGate(),
+          },
         );
       },
     );
   }
 }
 
-class AppWrapper extends StatefulWidget {
-  const AppWrapper({super.key});
+// Use StreamBuilder approach for more reliable auth state management
+class AuthGate extends StatefulWidget {
+  const AuthGate({super.key});
 
   @override
-  State<AppWrapper> createState() => _AppWrapperState();
+  State<AuthGate> createState() => _AuthGateState();
 }
 
-class _AppWrapperState extends State<AppWrapper> {
-  bool _showSplash = true;
+class _AuthGateState extends State<AuthGate> {
+  User? _currentUser;
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _hideSplashScreen();
+    _checkAuthState();
   }
 
-  void _hideSplashScreen() async {
-    await Future.delayed(const Duration(seconds: 2));
-    if (mounted) {
-      setState(() {
-        _showSplash = false;
-      });
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (_showSplash) {
-      return const SplashScreen();
-    }
-    return const AuthGate();
-  }
-}
-
-// Use StreamBuilder approach for more reliable auth state management
-class AuthGate extends StatelessWidget {
-  const AuthGate({super.key});
-
-  @override
-  Widget build(BuildContext context) {
+  void _checkAuthState() {
+    print('AuthGate: Checking auth state...');
+    final user = FirebaseAuth.instance.currentUser;
+    print('AuthGate: Current user: ${user?.email}');
     
-    return StreamBuilder<User?>(
-      stream: FirebaseAuth.instance.authStateChanges(),
-      builder: (context, snapshot) {
+    setState(() {
+      _currentUser = user;
+      _isLoading = false;
+    });
+
+    // Listen to auth changes
+    FirebaseAuth.instance.authStateChanges().listen((User? user) {
+      print('AuthGate: Auth state changed - User: ${user?.email}');
+      if (mounted) {
+        setState(() {
+          _currentUser = user;
+        });
         
-        // Show loading while waiting for auth state
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(
-            body: Center(
-              child: CircularProgressIndicator(),
-            ),
-          );
+        // Reset navigation to home page when user logs in
+        if (user != null) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            final navProvider = Provider.of<BottomNavProvider>(context, listen: false);
+            navProvider.setIndex(0);
+          });
         }
-        
-        // Handle errors
-        if (snapshot.hasError) {
-          return Scaffold(
-            body: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Text('Authentication Error'),
-                  Text('${snapshot.error}'),
-                  ElevatedButton(
-                    onPressed: () {
-                      // Restart the app or navigate to login
-                      Navigator.of(context).pushReplacement(
-                        MaterialPageRoute(builder: (context) => const LoginPage()),
-                      );
-                    },
-                    child: const Text('Try Again'),
-                  ),
-                ],
-              ),
-            ),
-          );
-        }
-        
-        // Check if user is logged in
-        if (snapshot.hasData && snapshot.data != null) {
-          return const BottomNav();
-        }
-        
-        return const LoginPage();
-      },
-    );
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    print('AuthGate: Building with user: ${_currentUser?.email}');
+    
+    if (_isLoading) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (_currentUser != null) {
+      print('AuthGate: Returning BottomNav for user: ${_currentUser?.email}');
+      return const BottomNav();
+    }
+
+    print('AuthGate: Returning LoginPage - no user');
+    return const LoginPage();
   }
 }
 

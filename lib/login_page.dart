@@ -73,14 +73,12 @@ Future<void> _login() async {
   final email = _emailController.text.trim();
   final password = _passwordController.text.trim();
   
-  
   try {
     
     UserCredential userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
       email: email,
       password: password,
     );
-    
     
     // Double-check current user after login
     final currentUser = FirebaseAuth.instance.currentUser;
@@ -102,7 +100,6 @@ Future<void> _login() async {
     }
     
   } on FirebaseAuthException catch (e) {
-    
     String errorMessage;
     switch (e.code) {
       case 'user-not-found':
@@ -125,6 +122,9 @@ Future<void> _login() async {
         break;
       case 'invalid-credential':
         errorMessage = 'Invalid email or password.';
+        break;
+      case 'user-token-expired':
+        errorMessage = 'Session expired. Please log in again.';
         break;
       default:
         errorMessage = e.message ?? 'An error occurred. Please try again.';
