@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'database_helper.dart';
+import 'book_details_page.dart'; // Added import for BookDetailsPage
 
 class SearchPage extends StatefulWidget {
   const SearchPage({super.key});
@@ -95,8 +96,15 @@ class _SearchPageState extends State<SearchPage> {
                           : const Icon(Icons.book, size: 40),
                       title: Text(book.title),
                       subtitle: Text(book.authorName ?? ''),
-                      onTap: () {
-                        // You can add navigation to book details here
+                      onTap: () async {
+                        FocusScope.of(context).unfocus(); // Hide the keyboard
+                        await Future.delayed(const Duration(milliseconds: 150)); // Wait 150ms
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => BookDetailsPage(book: book),
+                          ),
+                        );
                       },
                     );
                   },
