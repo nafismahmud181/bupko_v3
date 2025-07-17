@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'main.dart';
-import 'login_page.dart';
 
 class SettingPage extends StatefulWidget {
   const SettingPage({super.key});
@@ -14,12 +13,10 @@ class _SettingPageState extends State<SettingPage> {
   @override
   void initState() {
     super.initState();
-    print('SettingPage: initState called');
   }
 
   @override
   Widget build(BuildContext context) {
-    print('SettingPage: build called');
     final theme = Theme.of(context);
     
     return Scaffold(
@@ -50,7 +47,6 @@ class _SettingPageState extends State<SettingPage> {
             const SizedBox(height: 32),
             ElevatedButton(
               onPressed: () async {
-                print('SettingPage: Logout button pressed');
                 
                 // Show confirmation dialog
                 final shouldLogout = await showDialog<bool>(

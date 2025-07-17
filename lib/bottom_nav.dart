@@ -20,7 +20,6 @@ class _BottomNavState extends State<BottomNav> {
   @override
   void initState() {
     super.initState();
-    print('BottomNav: initState called');
     _pages = [
       const HomePage(),
       const CategoryPage(),
@@ -31,10 +30,8 @@ class _BottomNavState extends State<BottomNav> {
 
   @override
   Widget build(BuildContext context) {
-    print('BottomNav: build called');
     final navProvider = Provider.of<BottomNavProvider>(context);
     final selectedIndex = navProvider.selectedIndex;
-    print('BottomNav: selectedIndex = $selectedIndex');
 
     return PopScope(
       canPop: false, // Always handle the pop manually

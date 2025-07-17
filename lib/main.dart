@@ -69,9 +69,7 @@ class _AuthGateState extends State<AuthGate> {
   }
 
   void _checkAuthState() {
-    print('AuthGate: Checking auth state...');
     final user = FirebaseAuth.instance.currentUser;
-    print('AuthGate: Current user: ${user?.email}');
     
     setState(() {
       _currentUser = user;
@@ -80,7 +78,6 @@ class _AuthGateState extends State<AuthGate> {
 
     // Listen to auth changes
     FirebaseAuth.instance.authStateChanges().listen((User? user) {
-      print('AuthGate: Auth state changed - User: ${user?.email}');
       if (mounted) {
         setState(() {
           _currentUser = user;
@@ -99,7 +96,6 @@ class _AuthGateState extends State<AuthGate> {
 
   @override
   Widget build(BuildContext context) {
-    print('AuthGate: Building with user: ${_currentUser?.email}');
     
     if (_isLoading) {
       return const Scaffold(
@@ -108,11 +104,9 @@ class _AuthGateState extends State<AuthGate> {
     }
 
     if (_currentUser != null) {
-      print('AuthGate: Returning BottomNav for user: ${_currentUser?.email}');
       return const BottomNav();
     }
 
-    print('AuthGate: Returning LoginPage - no user');
     return const LoginPage();
   }
 }
