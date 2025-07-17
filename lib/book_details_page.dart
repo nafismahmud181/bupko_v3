@@ -21,6 +21,7 @@ class _BookDetailsPageState extends widgets.State<BookDetailsPage> with widgets.
   double _downloadProgress = 0.0;
   bool _isBookDownloaded = false;
   String? _localFilePath;
+  CancelToken? _cancelToken;
 
   @override
   void initState() {
@@ -83,6 +84,7 @@ class _BookDetailsPageState extends widgets.State<BookDetailsPage> with widgets.
 
   @override
   void dispose() {
+    _cancelToken?.cancel('Download cancelled by leaving the page.');
     _tabController.dispose();
     super.dispose();
   }
@@ -132,12 +134,14 @@ class _BookDetailsPageState extends widgets.State<BookDetailsPage> with widgets.
     setState(() {
       _downloading = true;
       _downloadProgress = 0.0;
+      _cancelToken = CancelToken();
     });
 
     final connectivity = await Connectivity().checkConnectivity();
     if (connectivity == ConnectivityResult.none) {
       setState(() {
         _downloading = false;
+        _cancelToken = null;
       });
       widgets.ScaffoldMessenger.of(context).showSnackBar(
         widgets.SnackBar(content: widgets.Text('No internet connection. Please check your network and try again.')),
@@ -154,6 +158,7 @@ class _BookDetailsPageState extends widgets.State<BookDetailsPage> with widgets.
         await dio.download(
           url,
           savePath,
+          cancelToken: _cancelToken,
           onReceiveProgress: (received, total) {
             if (total != -1) {
               setState(() {
@@ -167,13 +172,25 @@ class _BookDetailsPageState extends widgets.State<BookDetailsPage> with widgets.
           ),
         );
         success = true;
+        _cancelToken = null;
       } on DioException catch (e) {
+        if (CancelToken.isCancel(e)) {
+          setState(() {
+            _downloading = false;
+            _cancelToken = null;
+          });
+          widgets.ScaffoldMessenger.of(context).showSnackBar(
+            const widgets.SnackBar(content: widgets.Text('Download cancelled.')),
+          );
+          return;
+        }
         retries++;
         if (retries >= maxRetries) {
           // Clean up partial file
           if (await file.exists()) await file.delete();
           setState(() {
             _downloading = false;
+            _cancelToken = null;
           });
           widgets.ScaffoldMessenger.of(context).showSnackBar(
             widgets.SnackBar(content: widgets.Text('Download failed after $maxRetries attempts: ${e.message ?? e.toString()}')),
@@ -185,6 +202,7 @@ class _BookDetailsPageState extends widgets.State<BookDetailsPage> with widgets.
         retries = maxRetries; // Don't retry on unknown errors
         setState(() {
           _downloading = false;
+          _cancelToken = null;
         });
         widgets.ScaffoldMessenger.of(context).showSnackBar(
           widgets.SnackBar(content: widgets.Text('Download failed: ${e.toString()}')),
@@ -198,6 +216,7 @@ class _BookDetailsPageState extends widgets.State<BookDetailsPage> with widgets.
       _downloading = false;
       _isBookDownloaded = true;
       _localFilePath = savePath;
+      _cancelToken = null;
     });
 
     // Save mapping from file path to book ID
@@ -426,6 +445,17 @@ class _BookDetailsPageState extends widgets.State<BookDetailsPage> with widgets.
                 backgroundColor: colorScheme.surfaceContainerHighest,
                 valueColor: widgets.AlwaysStoppedAnimation<widgets.Color>(colorScheme.primary),
               ),
+              const widgets.SizedBox(height: 8),
+              widgets.TextButton.icon(
+                onPressed: () {
+                  _cancelToken?.cancel('Download cancelled by user.');
+                  setState(() {
+                    _downloading = false;
+                  });
+                },
+                icon: const widgets.Icon(widgets.Icons.cancel, color: widgets.Colors.red),
+                label: const widgets.Text('Cancel Download', style: widgets.TextStyle(color: widgets.Colors.red)),
+              ),
             ],
             const widgets.SizedBox(height: 18),
           ],
@@ -471,4 +501,4 @@ class _VerticalDivider extends widgets.StatelessWidget {
       color: colorScheme.outline.withValues(alpha:0.15),
     );
   }
-}
+} 

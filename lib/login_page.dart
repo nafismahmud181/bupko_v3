@@ -590,4 +590,4 @@ Future<void> _testFirebaseConnection() async {
     _passwordController.dispose();
     super.dispose();
   }
-}
+} 

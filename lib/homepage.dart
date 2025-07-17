@@ -415,7 +415,7 @@ class _HomePageState extends State<HomePage> {
               categoryWithBooks: categories[index],
               onBookTap: (book) {
           Navigator.push(
-                  context,
+            context,
                   MaterialPageRoute(
                     builder: (context) => BookDetailsPage(book: book),
                   ),
@@ -800,4 +800,4 @@ class DownloadedBook {
     required this.lastModified,
     required this.fileType,
   });
-}
+} 
