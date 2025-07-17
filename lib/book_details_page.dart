@@ -6,6 +6,8 @@ import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 import 'dart:convert';
 import 'epub_reader_page.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class BookDetailsPage extends widgets.StatefulWidget {
   final Book book;
@@ -230,6 +232,28 @@ class _BookDetailsPageState extends widgets.State<BookDetailsPage> with widgets.
     }
     mapping[savePath] = book.id;
     await mappingFile.writeAsString(json.encode(mapping));
+
+    // Save book metadata to Firestore for the current user
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      final bookMeta = {
+        'id': book.id,
+        'title': book.title,
+        'authorName': book.authorName,
+        'coverImageUrl': book.coverImageUrl,
+        'fileType': ext,
+        'epubDownloadUrl': book.epubDownloadUrl,
+        'pdfDownloadUrl': book.pdfDownloadUrl,
+        'txtDownloadUrl': book.txtDownloadUrl,
+        'downloadedAt': DateTime.now().toIso8601String(),
+      };
+      await FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .collection('downloaded_books')
+        .doc(book.id.toString())
+        .set(bookMeta);
+    }
 
     widgets.ScaffoldMessenger.of(context).showSnackBar(
       widgets.SnackBar(content: widgets.Text('Downloaded to $savePath')),

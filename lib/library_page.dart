@@ -2,6 +2,10 @@ import 'package:flutter/material.dart' as widgets;
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 import 'epub_reader_page.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'book_details_page.dart'; // Added import for BookDetailsPage
+import 'database_helper.dart'; // Import Book model
 
 class LibraryPage extends widgets.StatefulWidget {
   const LibraryPage({super.key});
@@ -10,8 +14,43 @@ class LibraryPage extends widgets.StatefulWidget {
   widgets.State<LibraryPage> createState() => _LibraryPageState();
 }
 
+class FirestoreBook {
+  final String id;
+  final String title;
+  final String? authorName;
+  final String? coverImageUrl;
+  final String fileType;
+  final String? epubDownloadUrl;
+  final String? pdfDownloadUrl;
+  final String? txtDownloadUrl;
+
+  FirestoreBook({
+    required this.id,
+    required this.title,
+    this.authorName,
+    this.coverImageUrl,
+    required this.fileType,
+    this.epubDownloadUrl,
+    this.pdfDownloadUrl,
+    this.txtDownloadUrl,
+  });
+
+  factory FirestoreBook.fromMap(Map<String, dynamic> map) {
+    return FirestoreBook(
+      id: map['id'].toString(),
+      title: map['title'] ?? '',
+      authorName: map['authorName'],
+      coverImageUrl: map['coverImageUrl'],
+      fileType: map['fileType'] ?? '',
+      epubDownloadUrl: map['epubDownloadUrl'],
+      pdfDownloadUrl: map['pdfDownloadUrl'],
+      txtDownloadUrl: map['txtDownloadUrl'],
+    );
+  }
+}
+
 class _LibraryPageState extends widgets.State<LibraryPage> with widgets.SingleTickerProviderStateMixin, widgets.WidgetsBindingObserver {
-  List<DownloadedBook> _downloadedBooks = [];
+  List<FirestoreBook> _firestoreBooks = [];
   bool _isLoading = true;
   String _searchQuery = '';
   late widgets.AnimationController _animationController;
@@ -32,7 +71,7 @@ class _LibraryPageState extends widgets.State<LibraryPage> with widgets.SingleTi
       parent: _animationController,
       curve: widgets.Curves.easeInOut,
     ));
-    _loadDownloadedBooks();
+    _loadFirestoreBooks();
   }
 
   @override
@@ -42,55 +81,92 @@ class _LibraryPageState extends widgets.State<LibraryPage> with widgets.SingleTi
     super.dispose();
   }
 
-  Future<void> _loadDownloadedBooks() async {
-    try {
-      final dir = await getApplicationDocumentsDirectory();
-      final files = await dir.list().toList();
-      
-      List<DownloadedBook> books = [];
-      
-      for (final file in files) {
-        if (file is File) {
-          final fileName = file.path.split('/').last;
-          final extension = fileName.split('.').last.toLowerCase();
-          
-          if (['epub', 'pdf', 'txt'].contains(extension)) {
-            final bookTitle = fileName.split('.').first.replaceAll('_', ' ');
-            final fileSize = await file.length();
-            final lastModified = await file.lastModified();
-            
-            books.add(DownloadedBook(
-              title: bookTitle,
+  Future<void> _loadFirestoreBooks() async {
+    setState(() {
+      _isLoading = true;
+    });
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      setState(() {
+        _firestoreBooks = [];
+        _isLoading = false;
+      });
+      return;
+    }
+    final snapshot = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .collection('downloaded_books')
+        .get();
+    final books = snapshot.docs.map((doc) => FirestoreBook.fromMap(doc.data())).toList();
+    setState(() {
+      _firestoreBooks = books;
+      _isLoading = false;
+    });
+    _animationController.forward();
+  }
+
+  Future<bool> _localFileExists(FirestoreBook book) async {
+    final dir = await getApplicationDocumentsDirectory();
+    final fileName = '${book.title.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_')}.${book.fileType}';
+    final file = File('${dir.path}/$fileName');
+    return file.exists();
+  }
+
+  Future<void> _openOrDownloadBook(FirestoreBook book) async {
+    final dir = await getApplicationDocumentsDirectory();
+    final fileName = '${book.title.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_')}.${book.fileType}';
+    final file = File('${dir.path}/$fileName');
+    if (await file.exists()) {
+      // Open the book (epub/pdf/txt)
+      if (book.fileType == 'epub') {
+        if (!mounted) return;
+        widgets.Navigator.push(
+          context,
+          widgets.MaterialPageRoute(
+            builder: (context) => EpubReaderPage(
               filePath: file.path,
-              fileSize: fileSize,
-              lastModified: lastModified,
-              fileType: extension,
-            ));
-          }
-        }
+              bookTitle: book.title,
+            ),
+          ),
+        );
+      } else {
+        if (!mounted) return;
+        widgets.ScaffoldMessenger.of(context).showSnackBar(
+          widgets.SnackBar(content: widgets.Text('Opening ${book.fileType.toUpperCase()} file...')),
+        );
       }
-      
-      // Sort by last modified date (newest first)
-      books.sort((a, b) => b.lastModified.compareTo(a.lastModified));
-      
+    } else {
+      // Download the book again
+      String? url = book.epubDownloadUrl ?? book.pdfDownloadUrl ?? book.txtDownloadUrl;
+      if (url == null) {
+        if (!mounted) return;
+        widgets.ScaffoldMessenger.of(context).showSnackBar(
+          widgets.SnackBar(content: widgets.Text('No download URL available for this book.')),
+        );
+        return;
+      }
       if (!mounted) return;
-      setState(() {
-        _downloadedBooks = books;
-        _isLoading = false;
-      });
-      
-      _animationController.forward();
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _isLoading = false;
-      });
+      widgets.Navigator.push(
+        context,
+        widgets.MaterialPageRoute(
+          builder: (context) => BookDetailsPage(book: Book(
+            id: int.tryParse(book.id) ?? 0,
+            title: book.title,
+            authorName: book.authorName,
+            coverImageUrl: book.coverImageUrl,
+            epubDownloadUrl: book.epubDownloadUrl,
+            pdfDownloadUrl: book.pdfDownloadUrl,
+            txtDownloadUrl: book.txtDownloadUrl,
+          )),
+        ),
+      ).then((_) => _loadFirestoreBooks());
     }
   }
 
-  List<DownloadedBook> get _filteredBooks {
-    if (_searchQuery.isEmpty) return _downloadedBooks;
-    return _downloadedBooks.where((book) =>
+  List<FirestoreBook> get _filteredBooks {
+    if (_searchQuery.isEmpty) return _firestoreBooks;
+    return _firestoreBooks.where((book) =>
         book.title.toLowerCase().contains(_searchQuery.toLowerCase())).toList();
   }
 
@@ -118,50 +194,6 @@ class _LibraryPageState extends widgets.State<LibraryPage> with widgets.SingleTi
     }
   }
 
-  Future<void> _openBook(DownloadedBook book) async {
-    try {
-      final file = File(book.filePath);
-      if (!await file.exists()) {
-        if (!mounted) return;
-        widgets.ScaffoldMessenger.of(context).showSnackBar(
-          widgets.SnackBar(
-            content: widgets.Text('File not found: ${book.title}'),
-            backgroundColor: widgets.Colors.red,
-          ),
-        );
-        return;
-      }
-
-      if (book.fileType == 'epub') {
-        if (!mounted) return;
-        widgets.Navigator.push(
-          context,
-          widgets.MaterialPageRoute(
-            builder: (context) => EpubReaderPage(
-              filePath: book.filePath,
-              bookTitle: book.title,
-            ),
-          ),
-        );
-      } else {
-        if (!mounted) return;
-        widgets.ScaffoldMessenger.of(context).showSnackBar(
-          widgets.SnackBar(
-            content: widgets.Text('Opening ${book.fileType.toUpperCase()} file...'),
-          ),
-        );
-      }
-    } catch (e) {
-      if (!mounted) return;
-      widgets.ScaffoldMessenger.of(context).showSnackBar(
-        widgets.SnackBar(
-          content: widgets.Text('Error opening book: $e'),
-          backgroundColor: widgets.Colors.red,
-        ),
-      );
-    }
-  }
-
   Future<void> _deleteBook(DownloadedBook book) async {
     try {
       final file = File(book.filePath);
@@ -169,7 +201,7 @@ class _LibraryPageState extends widgets.State<LibraryPage> with widgets.SingleTi
         await file.delete();
         if (!mounted) return;
         setState(() {
-          _downloadedBooks.remove(book);
+          _firestoreBooks.remove(book);
         });
         widgets.ScaffoldMessenger.of(context).showSnackBar(
           widgets.SnackBar(
@@ -214,285 +246,151 @@ class _LibraryPageState extends widgets.State<LibraryPage> with widgets.SingleTi
     );
   }
 
-  widgets.Widget _buildBookCard(DownloadedBook book) {
+  widgets.Widget _buildBookCard(FirestoreBook book) {
     final theme = widgets.Theme.of(context);
     final colorScheme = theme.colorScheme;
-    
-    return widgets.Card(
-      margin: const widgets.EdgeInsets.only(bottom: 16),
-      elevation: 0,
-      shape: widgets.RoundedRectangleBorder(
-        borderRadius: widgets.BorderRadius.circular(16),
-        side: widgets.BorderSide(
-          color: colorScheme.outline.withValues(alpha:0.1),
-          width: 1,
-        ),
-      ),
-      child: widgets.InkWell(
-        onTap: () => _openBook(book),
-        borderRadius: widgets.BorderRadius.circular(16),
-        child: widgets.Padding(
-          padding: const widgets.EdgeInsets.all(16),
-          child: widgets.Row(
-            crossAxisAlignment: widgets.CrossAxisAlignment.start,
-            children: [
-              // Book Icon
-              widgets.Container(
-                width: 60,
-                height: 80,
-                decoration: widgets.BoxDecoration(
-                  color: colorScheme.primary.withValues(alpha:0.1),
-                  borderRadius: widgets.BorderRadius.circular(8),
-                ),
-                child: widgets.Icon(
-                  book.fileType == 'epub' ? widgets.Icons.menu_book :
-                  book.fileType == 'pdf' ? widgets.Icons.picture_as_pdf :
-                  widgets.Icons.text_snippet,
-                  size: 32,
-                  color: colorScheme.primary,
-                ),
-              ),
-              const widgets.SizedBox(width: 16),
-              // Book Info
-              widgets.Expanded(
-                child: widgets.Column(
-                  crossAxisAlignment: widgets.CrossAxisAlignment.start,
-                  children: [
-                    widgets.Text(
-                      book.title,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: widgets.FontWeight.w600,
-                      ),
-                      maxLines: 2,
-                      overflow: widgets.TextOverflow.ellipsis,
-                    ),
-                    const widgets.SizedBox(height: 4),
-                    widgets.Row(
-                      children: [
-                        widgets.Container(
-                          padding: const widgets.EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 2,
-                          ),
-                          decoration: widgets.BoxDecoration(
-                            color: colorScheme.secondary.withValues(alpha:0.1),
-                            borderRadius: widgets.BorderRadius.circular(12),
-                          ),
-                          child: widgets.Text(
-                            book.fileType.toUpperCase(),
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: colorScheme.secondary,
-                              fontWeight: widgets.FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                        const widgets.SizedBox(width: 8),
-                        widgets.Text(
-                          _formatFileSize(book.fileSize),
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: colorScheme.onSurface.withValues(alpha:0.6),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const widgets.SizedBox(height: 8),
-                    widgets.Text(
-                      'Downloaded ${_formatDate(book.lastModified)}',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: colorScheme.onSurface.withValues(alpha:0.5),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              // Actions
-              widgets.Column(
-                children: [
-                  widgets.IconButton(
-                    onPressed: () => _openBook(book),
-                    icon: widgets.Icon(
-                      widgets.Icons.play_arrow,
-                      color: colorScheme.primary,
-                    ),
-                    style: widgets.IconButton.styleFrom(
-                      backgroundColor: colorScheme.primary.withValues(alpha:0.1),
-                      shape: widgets.RoundedRectangleBorder(
-                        borderRadius: widgets.BorderRadius.circular(8),
-                      ),
-                    ),
-                  ),
-                  const widgets.SizedBox(height: 4),
-                  widgets.IconButton(
-                    onPressed: () => _showDeleteDialog(book),
-                    icon: widgets.Icon(
-                      widgets.Icons.delete_outline,
-                      color: widgets.Colors.red.withValues(alpha:0.7),
-                    ),
-                    style: widgets.IconButton.styleFrom(
-                      backgroundColor: widgets.Colors.red.withValues(alpha:0.1),
-                      shape: widgets.RoundedRectangleBorder(
-                        borderRadius: widgets.BorderRadius.circular(8),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+    return widgets.FutureBuilder<bool>(
+      future: _localFileExists(book),
+      builder: (context, snapshot) {
+        final exists = snapshot.data ?? false;
+        return widgets.Card(
+          margin: const widgets.EdgeInsets.only(bottom: 16),
+          elevation: 0,
+          shape: widgets.RoundedRectangleBorder(
+            borderRadius: widgets.BorderRadius.circular(16),
+            side: widgets.BorderSide(
+              color: colorScheme.outline.withValues(alpha:0.1),
+              width: 1,
+            ),
           ),
-        ),
-      ),
+          child: widgets.Padding(
+            padding: const widgets.EdgeInsets.all(16),
+            child: widgets.Row(
+              crossAxisAlignment: widgets.CrossAxisAlignment.start,
+              children: [
+                book.coverImageUrl != null && book.coverImageUrl!.isNotEmpty
+                    ? widgets.ClipRRect(
+                        borderRadius: widgets.BorderRadius.circular(8),
+                        child: widgets.Image.network(
+                          book.coverImageUrl!,
+                          width: 50,
+                          height: 70,
+                          fit: widgets.BoxFit.cover,
+                        ),
+                      )
+                    : widgets.Container(
+                        width: 50,
+                        height: 70,
+                        decoration: widgets.BoxDecoration(
+                          color: colorScheme.surfaceVariant,
+                          borderRadius: widgets.BorderRadius.circular(8),
+                        ),
+                        child: const widgets.Icon(widgets.Icons.book, size: 32),
+                      ),
+                const widgets.SizedBox(width: 16),
+                widgets.Expanded(
+                  child: widgets.Column(
+                    crossAxisAlignment: widgets.CrossAxisAlignment.start,
+                    children: [
+                      widgets.Text(
+                        book.title,
+                        style: theme.textTheme.titleMedium?.copyWith(fontWeight: widgets.FontWeight.bold),
+                        maxLines: 2,
+                        overflow: widgets.TextOverflow.ellipsis,
+                      ),
+                      if (book.authorName != null && book.authorName!.isNotEmpty)
+                        widgets.Text(
+                          book.authorName!,
+                          style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurface.withValues(alpha:0.7)),
+                          maxLines: 1,
+                          overflow: widgets.TextOverflow.ellipsis,
+                        ),
+                      const widgets.SizedBox(height: 8),
+                      widgets.Row(
+                        children: [
+                          widgets.ElevatedButton(
+                            onPressed: () => _openOrDownloadBook(book),
+                            style: widgets.ElevatedButton.styleFrom(
+                              backgroundColor: exists ? colorScheme.primary : widgets.Colors.red,
+                              foregroundColor: widgets.Colors.white,
+                              padding: const widgets.EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                              shape: widgets.RoundedRectangleBorder(
+                                borderRadius: widgets.BorderRadius.circular(8),
+                              ),
+                            ),
+                            child: widgets.Text(exists ? 'Read' : 'Download'),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
   @override
   void didChangeAppLifecycleState(widgets.AppLifecycleState state) {
     if (state == widgets.AppLifecycleState.resumed) {
-      _loadDownloadedBooks();
+      _loadFirestoreBooks();
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      setState(() {
+        _firestoreBooks = [];
+      });
+    } else {
+      _loadFirestoreBooks();
     }
   }
 
   @override
   widgets.Widget build(widgets.BuildContext context) {
-    final theme = widgets.Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      return const widgets.Center(child: widgets.Text('Not logged in.'));
+    }
     return widgets.Scaffold(
-      backgroundColor: colorScheme.surface,
       appBar: widgets.AppBar(
-        title: widgets.Text(
-          'My Library',
-          style: theme.textTheme.headlineSmall?.copyWith(
-            fontWeight: widgets.FontWeight.bold,
-          ),
-        ),
-        backgroundColor: widgets.Colors.transparent,
-        elevation: 0,
-        actions: [
-          widgets.IconButton(
-            onPressed: _loadDownloadedBooks,
-            icon: const widgets.Icon(widgets.Icons.refresh),
-          ),
-        ],
+        title: const widgets.Text('Your Library'),
       ),
-      body: _isLoading
-          ? widgets.Center(
-              child: widgets.Column(
-                mainAxisAlignment: widgets.MainAxisAlignment.center,
-                children: [
-                  widgets.CircularProgressIndicator(
-                    color: colorScheme.primary,
-                  ),
-                  const widgets.SizedBox(height: 16),
-                  widgets.Text(
-                    'Loading your library...',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: colorScheme.onSurface.withValues(alpha:0.6),
-                    ),
-                  ),
-                ],
-              ),
-            )
-          : widgets.Padding(
-              padding: const widgets.EdgeInsets.all(16),
-              child: widgets.Column(
-                crossAxisAlignment: widgets.CrossAxisAlignment.start,
-                children: [
-                  // Search Bar
-                  widgets.Container(
-                    decoration: widgets.BoxDecoration(
-                      color: colorScheme.surface,
-                      borderRadius: widgets.BorderRadius.circular(16),
-                      border: widgets.Border.all(
-                        color: colorScheme.outline.withValues(alpha:0.1),
-                      ),
-                    ),
-                    child: widgets.TextField(
-                      onChanged: (value) {
-                        setState(() {
-                          _searchQuery = value;
-                        });
-                      },
-                      decoration: widgets.InputDecoration(
-                        hintText: 'Search your books...',
-                        prefixIcon: widgets.Icon(
-                          widgets.Icons.search,
-                          color: colorScheme.onSurface.withValues(alpha:0.6),
-                        ),
-                        border: widgets.InputBorder.none,
-                        contentPadding: const widgets.EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 16,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const widgets.SizedBox(height: 24),
-                  // Stats Row
-                  widgets.Row(
-                    children: [
-                      widgets.Text(
-                        '${_filteredBooks.length} books',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: widgets.FontWeight.w600,
-                        ),
-                      ),
-                      const widgets.Spacer(),
-                      widgets.Text(
-                        '${_downloadedBooks.fold<double>(0, (sum, book) => sum + book.fileSize / (1024 * 1024))
-                            .toStringAsFixed(1)} MB total',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: colorScheme.onSurface.withValues(alpha:0.6),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const widgets.SizedBox(height: 16),
-                  // Books List
-                  widgets.Expanded(
-                    child: _filteredBooks.isEmpty
-                        ? widgets.Center(
-                            child: widgets.Column(
-                              mainAxisAlignment: widgets.MainAxisAlignment.center,
-                              children: [
-                                widgets.Icon(
-                                  widgets.Icons.library_books_outlined,
-                                  size: 64,
-                                  color: colorScheme.onSurface.withValues(alpha:0.3),
-                                ),
-                                const widgets.SizedBox(height: 16),
-                                widgets.Text(
-                                  _searchQuery.isEmpty 
-                                      ? 'No books downloaded yet' 
-                                      : 'No books match your search',
-                                  style: theme.textTheme.titleMedium?.copyWith(
-                                    color: colorScheme.onSurface.withValues(alpha:0.5),
-                                  ),
-                                ),
-                                const widgets.SizedBox(height: 8),
-                                widgets.Text(
-                                  _searchQuery.isEmpty 
-                                      ? 'Download some books to see them here' 
-                                      : 'Try a different search term',
-                                  style: theme.textTheme.bodyMedium?.copyWith(
-                                    color: colorScheme.onSurface.withValues(alpha:0.4),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          )
-                        : widgets.FadeTransition(
-                            opacity: _fadeAnimation,
-                            child: widgets.ListView.builder(
-                              itemCount: _filteredBooks.length,
-                              itemBuilder: (context, index) {
-                                return _buildBookCard(_filteredBooks[index]);
-                              },
-                            ),
-                          ),
-                  ),
-                ],
-              ),
+      body: widgets.StreamBuilder<QuerySnapshot>(
+        stream: FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .collection('downloaded_books')
+            .snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == widgets.ConnectionState.waiting) {
+            return const widgets.Center(child: widgets.CircularProgressIndicator());
+          }
+          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+            return const widgets.Center(child: widgets.Text('No books found in your library.'));
+          }
+          final books = snapshot.data!.docs
+              .map((doc) => FirestoreBook.fromMap(doc.data() as Map<String, dynamic>))
+              .where((book) => _searchQuery.isEmpty || book.title.toLowerCase().contains(_searchQuery.toLowerCase()))
+              .toList();
+          return widgets.FadeTransition(
+            opacity: _fadeAnimation,
+            child: widgets.ListView.builder(
+              itemCount: books.length,
+              itemBuilder: (context, index) {
+                return _buildBookCard(books[index]);
+              },
             ),
+          );
+        },
+      ),
     );
   }
 }
