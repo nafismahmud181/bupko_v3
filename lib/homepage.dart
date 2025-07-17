@@ -430,34 +430,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildFloatingActionButton(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.8),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: FloatingActionButton.extended(
-        onPressed: () => Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const BookUploadFormPage()),
-        ).then((_) => _loadLastDownloadedBook()),
-        icon: const Icon(Icons.add_rounded),
-        label: const Text('Add Book'),
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        foregroundColor: Theme.of(context).colorScheme.onPrimary,
-        elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-      ),
-    );
-  }
+ 
 
   @override
   Widget build(BuildContext context) {
@@ -483,7 +456,6 @@ class _HomePageState extends State<HomePage> {
           },
         ),
       ),
-      floatingActionButton: _buildFloatingActionButton(context),
     );
   }
 }
