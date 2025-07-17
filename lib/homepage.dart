@@ -8,6 +8,7 @@ import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 import 'epub_reader_page.dart';
 import 'dart:convert';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -20,6 +21,7 @@ class HomePageState extends State<HomePage> {
   Future<List<CategoryWithBooks>>? _booksFuture;
   DownloadedBook? _lastDownloadedBook;
   Book? _lastBookInfo;
+  bool _syncing = true;
 
   @override
   void initState() {
@@ -27,8 +29,48 @@ class HomePageState extends State<HomePage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       FocusScope.of(context).unfocus();
     });
-    _loadBooks();
-    loadLastDownloadedBook();
+    _syncFirestoreCategoriesAndBooks().then((_) {
+      setState(() {
+        _syncing = false;
+      });
+      _loadBooks();
+      loadLastDownloadedBook();
+    });
+  }
+
+  Future<void> _syncFirestoreCategoriesAndBooks() async {
+    final firestore = FirebaseFirestore.instance;
+    final categorySnaps = await firestore.collection('categories').get();
+    for (final catDoc in categorySnaps.docs) {
+      final data = catDoc.data();
+      final categoryName = data['name'] ?? catDoc.id;
+      final categoryId = data['id'] ?? catDoc.id.hashCode;
+      // Insert category if not exists
+      await DatabaseHelper().insertOrIgnoreCategory(
+        Category(
+          id: categoryId,
+          name: categoryName,
+          description: data['description'],
+          bookCount: data['bookCount'],
+          createdAt: data['createdAt'] != null ? DateTime.tryParse(data['createdAt']) : null,
+        ),
+      );
+      // Sync books for this category
+      final booksSnap = await catDoc.reference.collection('books').get();
+      for (final bookDoc in booksSnap.docs) {
+        final b = bookDoc.data();
+        final book = Book(
+          id: b['id'] ?? bookDoc.id.hashCode,
+          title: b['title'] ?? '',
+          authorName: b['authorName'],
+          coverImageUrl: b['coverImageUrl'],
+          epubDownloadUrl: b['epubDownloadUrl'],
+          pdfDownloadUrl: b['pdfDownloadUrl'],
+          txtDownloadUrl: b['txtDownloadUrl'],
+        );
+        await DatabaseHelper().insertOrIgnoreBook(book, categoryId);
+      }
+    }
   }
 
   void _loadBooks() {
@@ -438,6 +480,13 @@ class HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    if (_syncing) {
+      return Scaffold(
+        backgroundColor: theme.colorScheme.surface,
+        appBar: buildFixedAppBar(context),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
       appBar: buildFixedAppBar(context),

@@ -270,6 +270,21 @@ class DatabaseHelper {
     );
   }
 
+  Future<void> insertOrIgnoreCategory(Category category) async {
+    final db = await database;
+    await db.insert(
+      'categories',
+      {
+        'id': category.id,
+        'name': category.name,
+        'description': category.description,
+        'book_count': category.bookCount,
+        'created_at': category.createdAt?.toIso8601String(),
+      },
+      conflictAlgorithm: ConflictAlgorithm.ignore,
+    );
+  }
+
   Future<void> deleteBooksNotInList(int categoryId, Set<dynamic> keepBookIds) async {
     final db = await database;
     // Get all book_ids for this category
