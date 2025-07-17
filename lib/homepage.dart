@@ -13,10 +13,10 @@ class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  State<HomePage> createState() => HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class HomePageState extends State<HomePage> {
   Future<List<CategoryWithBooks>>? _booksFuture;
   DownloadedBook? _lastDownloadedBook;
   Book? _lastBookInfo;
@@ -28,7 +28,7 @@ class _HomePageState extends State<HomePage> {
       FocusScope.of(context).unfocus();
     });
     _loadBooks();
-    _loadLastDownloadedBook();
+    loadLastDownloadedBook();
   }
 
   void _loadBooks() {
@@ -42,7 +42,7 @@ class _HomePageState extends State<HomePage> {
     _loadBooks();
   }
 
-  Future<void> _loadLastDownloadedBook() async {
+  Future<void> loadLastDownloadedBook() async {
     try {
       final dir = await getApplicationDocumentsDirectory();
       final files = await dir.list().toList();
@@ -345,7 +345,7 @@ class _HomePageState extends State<HomePage> {
               onPressed: () => Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => const BookUploadFormPage()),
-              ).then((_) => _loadLastDownloadedBook()),
+              ).then((_) => loadLastDownloadedBook()),
               icon: const Icon(Icons.upload_file_rounded),
               label: const Text('Upload Your First Book'),
               style: ElevatedButton.styleFrom(
@@ -422,7 +422,7 @@ class _HomePageState extends State<HomePage> {
                   MaterialPageRoute(
                     builder: (context) => BookDetailsPage(book: book),
                   ),
-                ).then((_) => _loadLastDownloadedBook());
+                ).then((_) => loadLastDownloadedBook());
               },
             ),
             childCount: categories.length,

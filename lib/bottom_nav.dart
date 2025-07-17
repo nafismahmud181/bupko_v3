@@ -16,15 +16,23 @@ class BottomNav extends StatefulWidget {
 }
 
 class _BottomNavState extends State<BottomNav> {
+  final GlobalKey<HomePageState> _homePageKey = GlobalKey<HomePageState>();
   late final List<Widget> _pages;
 
   @override
   void initState() {
     super.initState();
     _pages = [
-      const HomePage(),
+      HomePage(key: _homePageKey),
       const CategoryPage(),
-      const LibraryPage(),
+      LibraryPage(
+        onBookDeleted: () {
+          final homeState = _homePageKey.currentState;
+          if (homeState != null && homeState.mounted) {
+            homeState.loadLastDownloadedBook();
+          }
+        },
+      ),
       const SettingPage(),
     ];
   }

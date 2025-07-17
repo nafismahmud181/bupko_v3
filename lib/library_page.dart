@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart' as widgets;
+import 'package:flutter/material.dart' show VoidCallback;
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 import 'epub_reader_page.dart';
@@ -8,7 +9,8 @@ import 'book_details_page.dart'; // Added import for BookDetailsPage
 import 'database_helper.dart'; // Import Book model
 
 class LibraryPage extends widgets.StatefulWidget {
-  const LibraryPage({super.key});
+  final VoidCallback? onBookDeleted;
+  const LibraryPage({super.key, this.onBookDeleted});
 
   @override
   widgets.State<LibraryPage> createState() => _LibraryPageState();
@@ -211,6 +213,10 @@ class _LibraryPageState extends widgets.State<LibraryPage> with widgets.SingleTi
         .collection('downloaded_books')
         .doc(book.id)
         .delete();
+    }
+    // Notify homepage to reload last downloaded book
+    if (widget.onBookDeleted != null) {
+      widget.onBookDeleted!();
     }
   }
 
