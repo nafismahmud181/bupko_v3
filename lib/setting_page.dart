@@ -2,45 +2,38 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'main.dart';
 
-class SettingPage extends StatefulWidget {
+class SettingPage extends StatelessWidget {
   const SettingPage({super.key});
 
   @override
-  State<SettingPage> createState() => _SettingPageState();
-}
-
-class _SettingPageState extends State<SettingPage> {
-  @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    
+    final user = FirebaseAuth.instance.currentUser;
     return Scaffold(
-      backgroundColor: theme.colorScheme.surface,
       appBar: AppBar(
         title: const Text('Settings'),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
       ),
-      body: Center(
+      body: Padding(
+        padding: const EdgeInsets.all(24.0),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            if (user != null && user.email != null) ...[
+              Text('Email:', style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(height: 4),
+              Text(user.email!, style: Theme.of(context).textTheme.bodyLarge),
+              const SizedBox(height: 24),
+            ],
             const Text('Settings Page'),
             const SizedBox(height: 20),
             ThemeToggleWidget(
-              isDark: theme.brightness == Brightness.dark,
-              theme: theme,
+              isDark: Theme.of(context).brightness == Brightness.dark,
+              theme: Theme.of(context),
               width: 140,
               height: 48,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               borderRadius: BorderRadius.circular(16),
-              backgroundColor: theme.cardColor,
-              borderColor: theme.dividerColor,
+              backgroundColor: Theme.of(context).cardColor,
+              borderColor: Theme.of(context).dividerColor,
               borderWidth: 1.2,
               elevation: 2,
             ),
@@ -72,7 +65,7 @@ class _SettingPageState extends State<SettingPage> {
                   },
                 ) ?? false;
                 
-                if (shouldLogout && mounted) {
+                if (shouldLogout) {
                   await FirebaseAuth.instance.signOut();
                 }
               },

@@ -360,7 +360,6 @@ class _BookDetailsPageState extends widgets.State<BookDetailsPage> with widgets.
               widgets.Row(
                 mainAxisAlignment: widgets.MainAxisAlignment.center,
                 children: [
-                  _VerticalDivider(),
                   _InfoColumn(label: 'Rating', value: book.rating != null ? '${book.rating!.toStringAsFixed(1)}/5' : '4.9/5'),
                   _VerticalDivider(),
                   _InfoColumn(label: 'Read', value: '5.3k'),
@@ -397,7 +396,6 @@ class _BookDetailsPageState extends widgets.State<BookDetailsPage> with widgets.
                   tabs: const [
                     widgets.Tab(child: widgets.Align(alignment: widgets.Alignment.center, child: widgets.Text('Description'))),
                     widgets.Tab(child: widgets.Align(alignment: widgets.Alignment.center, child: widgets.Text('Reviews'))),
-                    widgets.Tab(child: widgets.Align(alignment: widgets.Alignment.center, child: widgets.Text('Instruction'))),
                   ],
                 ),
               ),
@@ -420,7 +418,6 @@ class _BookDetailsPageState extends widgets.State<BookDetailsPage> with widgets.
                         ),
                       ),
                       const widgets.Center(child: widgets.Text('No reviews yet.')),
-                      const widgets.Center(child: widgets.Text('No instructions available.')),
                     ],
                   ),
                 ),
@@ -604,7 +601,6 @@ class _BookDetailsPageState extends widgets.State<BookDetailsPage> with widgets.
                 tabs: const [
                   widgets.Tab(child: widgets.Align(alignment: widgets.Alignment.center, child: widgets.Text('Description'))),
                   widgets.Tab(child: widgets.Align(alignment: widgets.Alignment.center, child: widgets.Text('Reviews'))),
-                  widgets.Tab(child: widgets.Align(alignment: widgets.Alignment.center, child: widgets.Text('Instruction'))),
                 ],
               ),
             ),
@@ -627,7 +623,6 @@ class _BookDetailsPageState extends widgets.State<BookDetailsPage> with widgets.
                       ),
                     ),
                     const widgets.Center(child: widgets.Text('No reviews yet.')),
-                    const widgets.Center(child: widgets.Text('No instructions available.')),
                   ],
                 ),
               ),
