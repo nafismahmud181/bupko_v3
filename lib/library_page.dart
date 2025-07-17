@@ -194,47 +194,41 @@ class _LibraryPageState extends widgets.State<LibraryPage> with widgets.SingleTi
     }
   }
 
-  Future<void> _deleteBook(DownloadedBook book) async {
-    try {
-      final file = File(book.filePath);
-      if (await file.exists()) {
-        await file.delete();
-        if (!mounted) return;
-        setState(() {
-          _firestoreBooks.remove(book);
-        });
-        widgets.ScaffoldMessenger.of(context).showSnackBar(
-          widgets.SnackBar(
-            content: widgets.Text('${book.title} deleted successfully'),
-          ),
-        );
-      }
-    } catch (e) {
-      if (!mounted) return;
-      widgets.ScaffoldMessenger.of(context).showSnackBar(
-        widgets.SnackBar(
-          content: widgets.Text('Error deleting book: $e'),
-          backgroundColor: widgets.Colors.red,
-        ),
-      );
+  Future<void> _deleteBook(FirestoreBook book) async {
+    // Delete local file if exists
+    final dir = await getApplicationDocumentsDirectory();
+    final fileName = '${book.title.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_')}.${book.fileType}';
+    final file = File('${dir.path}/$fileName');
+    if (await file.exists()) {
+      await file.delete();
+    }
+    // Delete from Firestore
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      await FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .collection('downloaded_books')
+        .doc(book.id)
+        .delete();
     }
   }
 
-  void _showDeleteDialog(DownloadedBook book) {
+  void _showDeleteDialog(FirestoreBook book) {
     widgets.showDialog(
       context: context,
       builder: (context) => widgets.AlertDialog(
         title: const widgets.Text('Delete Book'),
-        content: widgets.Text('Are you sure you want to delete "${book.title}"?'),
+        content: widgets.Text('Are you sure you want to delete "${book.title}"? This will remove the book from your device and your library.'),
         actions: [
           widgets.TextButton(
             onPressed: () => widgets.Navigator.of(context).pop(),
             child: const widgets.Text('Cancel'),
           ),
           widgets.TextButton(
-            onPressed: () {
+            onPressed: () async {
               widgets.Navigator.of(context).pop();
-              _deleteBook(book);
+              await _deleteBook(book);
             },
             style: widgets.TextButton.styleFrom(
               foregroundColor: widgets.Colors.red,
@@ -253,79 +247,121 @@ class _LibraryPageState extends widgets.State<LibraryPage> with widgets.SingleTi
       future: _localFileExists(book),
       builder: (context, snapshot) {
         final exists = snapshot.data ?? false;
-        return widgets.Card(
-          margin: const widgets.EdgeInsets.only(bottom: 16),
-          elevation: 0,
-          shape: widgets.RoundedRectangleBorder(
-            borderRadius: widgets.BorderRadius.circular(16),
-            side: widgets.BorderSide(
-              color: colorScheme.outline.withValues(alpha:0.1),
-              width: 1,
-            ),
+        return widgets.Dismissible(
+          key: widgets.Key('book_${book.id}'),
+          direction: widgets.DismissDirection.endToStart,
+          background: widgets.Container(
+            alignment: widgets.Alignment.centerRight,
+            padding: const widgets.EdgeInsets.symmetric(horizontal: 24),
+            color: widgets.Colors.red,
+            child: const widgets.Icon(widgets.Icons.delete, color: widgets.Colors.white, size: 32),
           ),
-          child: widgets.Padding(
-            padding: const widgets.EdgeInsets.all(16),
-            child: widgets.Row(
-              crossAxisAlignment: widgets.CrossAxisAlignment.start,
-              children: [
-                book.coverImageUrl != null && book.coverImageUrl!.isNotEmpty
-                    ? widgets.ClipRRect(
-                        borderRadius: widgets.BorderRadius.circular(8),
-                        child: widgets.Image.network(
-                          book.coverImageUrl!,
+          confirmDismiss: (direction) async {
+            bool? confirm = await widgets.showDialog<bool>(
+              context: context,
+              builder: (context) => widgets.AlertDialog(
+                title: const widgets.Text('Delete Book'),
+                content: widgets.Text('Are you sure you want to delete "${book.title}"? This will remove the book from your device and your library.'),
+                actions: [
+                  widgets.TextButton(
+                    onPressed: () => widgets.Navigator.of(context).pop(false),
+                    child: const widgets.Text('Cancel'),
+                  ),
+                  widgets.TextButton(
+                    onPressed: () => widgets.Navigator.of(context).pop(true),
+                    style: widgets.TextButton.styleFrom(
+                      foregroundColor: widgets.Colors.red,
+                    ),
+                    child: const widgets.Text('Delete'),
+                  ),
+                ],
+              ),
+            );
+            return confirm == true;
+          },
+          onDismissed: (direction) async {
+            await _deleteBook(book);
+          },
+          child: widgets.Card(
+            margin: const widgets.EdgeInsets.only(bottom: 16),
+            elevation: 0,
+            shape: widgets.RoundedRectangleBorder(
+              borderRadius: widgets.BorderRadius.circular(16),
+              side: widgets.BorderSide(
+                color: colorScheme.outline.withValues(alpha:0.1),
+                width: 1,
+              ),
+            ),
+            child: widgets.Padding(
+              padding: const widgets.EdgeInsets.all(16),
+              child: widgets.Row(
+                crossAxisAlignment: widgets.CrossAxisAlignment.start,
+                children: [
+                  book.coverImageUrl != null && book.coverImageUrl!.isNotEmpty
+                      ? widgets.ClipRRect(
+                          borderRadius: widgets.BorderRadius.circular(8),
+                          child: widgets.Image.network(
+                            book.coverImageUrl!,
+                            width: 50,
+                            height: 70,
+                            fit: widgets.BoxFit.cover,
+                          ),
+                        )
+                      : widgets.Container(
                           width: 50,
                           height: 70,
-                          fit: widgets.BoxFit.cover,
+                          decoration: widgets.BoxDecoration(
+                            color: colorScheme.surfaceVariant,
+                            borderRadius: widgets.BorderRadius.circular(8),
+                          ),
+                          child: const widgets.Icon(widgets.Icons.book, size: 32),
                         ),
-                      )
-                    : widgets.Container(
-                        width: 50,
-                        height: 70,
-                        decoration: widgets.BoxDecoration(
-                          color: colorScheme.surfaceVariant,
-                          borderRadius: widgets.BorderRadius.circular(8),
-                        ),
-                        child: const widgets.Icon(widgets.Icons.book, size: 32),
-                      ),
-                const widgets.SizedBox(width: 16),
-                widgets.Expanded(
-                  child: widgets.Column(
-                    crossAxisAlignment: widgets.CrossAxisAlignment.start,
-                    children: [
-                      widgets.Text(
-                        book.title,
-                        style: theme.textTheme.titleMedium?.copyWith(fontWeight: widgets.FontWeight.bold),
-                        maxLines: 2,
-                        overflow: widgets.TextOverflow.ellipsis,
-                      ),
-                      if (book.authorName != null && book.authorName!.isNotEmpty)
+                  const widgets.SizedBox(width: 16),
+                  widgets.Expanded(
+                    child: widgets.Column(
+                      crossAxisAlignment: widgets.CrossAxisAlignment.start,
+                      children: [
                         widgets.Text(
-                          book.authorName!,
-                          style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurface.withValues(alpha:0.7)),
-                          maxLines: 1,
+                          book.title,
+                          style: theme.textTheme.titleMedium?.copyWith(fontWeight: widgets.FontWeight.bold),
+                          maxLines: 2,
                           overflow: widgets.TextOverflow.ellipsis,
                         ),
-                      const widgets.SizedBox(height: 8),
-                      widgets.Row(
-                        children: [
-                          widgets.ElevatedButton(
-                            onPressed: () => _openOrDownloadBook(book),
-                            style: widgets.ElevatedButton.styleFrom(
-                              backgroundColor: exists ? colorScheme.primary : widgets.Colors.red,
-                              foregroundColor: widgets.Colors.white,
-                              padding: const widgets.EdgeInsets.symmetric(horizontal: 24, vertical: 10),
-                              shape: widgets.RoundedRectangleBorder(
-                                borderRadius: widgets.BorderRadius.circular(8),
-                              ),
-                            ),
-                            child: widgets.Text(exists ? 'Read' : 'Download'),
+                        if (book.authorName != null && book.authorName!.isNotEmpty)
+                          widgets.Text(
+                            book.authorName!,
+                            style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurface.withValues(alpha:0.7)),
+                            maxLines: 1,
+                            overflow: widgets.TextOverflow.ellipsis,
                           ),
-                        ],
-                      ),
-                    ],
+                        const widgets.SizedBox(height: 8),
+                        widgets.Row(
+                          children: [
+                            widgets.ElevatedButton(
+                              onPressed: () => _openOrDownloadBook(book),
+                              style: widgets.ElevatedButton.styleFrom(
+                                backgroundColor: exists ? colorScheme.primary : widgets.Colors.red,
+                                foregroundColor: widgets.Colors.white,
+                                padding: const widgets.EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                                shape: widgets.RoundedRectangleBorder(
+                                  borderRadius: widgets.BorderRadius.circular(8),
+                                ),
+                              ),
+                              child: widgets.Text(exists ? 'Read' : 'Download'),
+                            ),
+                            const widgets.SizedBox(width: 12),
+                            widgets.IconButton(
+                              icon: const widgets.Icon(widgets.Icons.delete_outline, color: widgets.Colors.red),
+                              onPressed: () => _showDeleteDialog(book),
+                              tooltip: 'Delete',
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         );
