@@ -9,12 +9,14 @@ import 'bottom_nav_provider.dart';
 import 'splash_screen.dart';
 import 'app_theme.dart';
 import 'dart:async';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 final ValueNotifier<ThemeMode> themeModeNotifier = ValueNotifier(ThemeMode.system);
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+  await _seedDemoCategoryAndBook(); // One-time seeding
   runApp(
     MultiProvider(
       providers: [
@@ -23,6 +25,24 @@ void main() async {
       child: const MyApp(),
     ),
   );
+}
+
+Future<void> _seedDemoCategoryAndBook() async {
+  final categoryRef = FirebaseFirestore.instance.collection('categories').doc('Chotha');
+  final categorySnap = await categoryRef.get();
+  if (!categorySnap.exists) {
+    await categoryRef.set({
+      'name': 'Chotha',
+      'description': 'A Firestore category for demo',
+    });
+    await categoryRef.collection('books').add({
+      'id': 10001,
+      'title': 'Demo Book',
+      'authorName': 'John Doe',
+      'coverImageUrl': 'https://via.placeholder.com/150',
+      'epubDownloadUrl': 'https://example.com/demo.epub',
+    });
+  }
 }
 
 class MyApp extends StatelessWidget {

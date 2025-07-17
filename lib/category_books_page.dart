@@ -1,10 +1,63 @@
 import 'package:flutter/material.dart';
 import 'database_helper.dart';
 import 'book_details_page.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
-class CategoryBooksPage extends StatelessWidget {
+class CategoryBooksPage extends StatefulWidget {
   final Category category;
   const CategoryBooksPage({super.key, required this.category});
+
+  @override
+  State<CategoryBooksPage> createState() => _CategoryBooksPageState();
+}
+
+class _CategoryBooksPageState extends State<CategoryBooksPage> {
+  late Future<List<Book>> _booksFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _booksFuture = _loadBooksHybrid();
+  }
+
+  Future<List<Book>> _loadBooksHybrid({bool forceRefresh = false}) async {
+    final localBooks = await DatabaseHelper().getBooksForCategory(widget.category.id, limit: 100);
+    if (localBooks.isNotEmpty && !forceRefresh) {
+      return localBooks;
+    }
+    // Fetch from Firestore
+    final snapshot = await FirebaseFirestore.instance
+        .collection('categories')
+        .doc(widget.category.name)
+        .collection('books')
+        .get();
+    final firestoreBooks = snapshot.docs.map((doc) {
+      final data = doc.data();
+      return Book(
+        id: data['id'] ?? doc.id.hashCode,
+        title: data['title'] ?? '',
+        authorName: data['authorName'],
+        coverImageUrl: data['coverImageUrl'],
+        epubDownloadUrl: data['epubDownloadUrl'],
+        pdfDownloadUrl: data['pdfDownloadUrl'],
+        txtDownloadUrl: data['txtDownloadUrl'],
+      );
+    }).toList();
+    // Mirror Firestore: delete local books not in Firestore
+    final firestoreBookIds = firestoreBooks.map((b) => b.id).toSet();
+    await DatabaseHelper().deleteBooksNotInList(widget.category.id, firestoreBookIds);
+    // Insert/update Firestore books into local DB
+    for (final book in firestoreBooks) {
+      await DatabaseHelper().insertOrIgnoreBook(book, widget.category.id);
+    }
+    return await DatabaseHelper().getBooksForCategory(widget.category.id, limit: 100);
+  }
+
+  void _refreshBooks() {
+    setState(() {
+      _booksFuture = _loadBooksHybrid(forceRefresh: true);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -14,7 +67,7 @@ class CategoryBooksPage extends StatelessWidget {
       backgroundColor: colorScheme.surface,
       appBar: AppBar(
         title: Text(
-          category.name,
+          widget.category.name,
           style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
         ),
         backgroundColor: theme.appBarTheme.backgroundColor ?? colorScheme.surface,
@@ -27,9 +80,16 @@ class CategoryBooksPage extends StatelessWidget {
             color: colorScheme.outline.withValues(alpha:0.08),
           ),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            tooltip: 'Sync with Firestore',
+            onPressed: _refreshBooks,
+          ),
+        ],
       ),
       body: FutureBuilder<List<Book>>(
-        future: DatabaseHelper().getBooksForCategory(category.id, limit: 100),
+        future: _booksFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(

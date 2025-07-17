@@ -176,7 +176,7 @@ class DatabaseHelper {
       await File(path).writeAsBytes(bytes);
     }
 
-    return await openDatabase(path, readOnly: true);
+    return await openDatabase(path);
   }
 
   // Method to force refresh the database from assets
@@ -240,5 +240,50 @@ class DatabaseHelper {
     final db = await database;
     final List<Map<String, dynamic>> maps = await db.query('categories');
     return maps.map((map) => Category.fromMap(map)).toList();
+  }
+
+  Future<void> insertOrIgnoreBook(Book book, int categoryId) async {
+    final db = await database;
+    // Insert book if not exists
+    await db.insert(
+      'books',
+      {
+        'id': book.id,
+        'title': book.title,
+        'author_name': book.authorName,
+        'cover_image_url': book.coverImageUrl,
+        'epub_download_url': book.epubDownloadUrl,
+        'pdf_download_url': book.pdfDownloadUrl,
+        'txt_download_url': book.txtDownloadUrl,
+        // Add other fields as needed
+      },
+      conflictAlgorithm: ConflictAlgorithm.ignore,
+    );
+    // Insert category mapping if not exists
+    await db.insert(
+      'book_categories',
+      {
+        'book_id': book.id,
+        'category_id': categoryId,
+      },
+      conflictAlgorithm: ConflictAlgorithm.ignore,
+    );
+  }
+
+  Future<void> deleteBooksNotInList(int categoryId, Set<dynamic> keepBookIds) async {
+    final db = await database;
+    // Get all book_ids for this category
+    final List<Map<String, dynamic>> maps = await db.query('book_categories', where: 'category_id = ?', whereArgs: [categoryId]);
+    final localBookIds = maps.map((m) => m['book_id']).toSet();
+    final idsToDelete = localBookIds.difference(keepBookIds);
+    for (final bookId in idsToDelete) {
+      // Remove from book_categories
+      await db.delete('book_categories', where: 'book_id = ? AND category_id = ?', whereArgs: [bookId, categoryId]);
+      // Optionally, remove from books table if not in any other category
+      final count = Sqflite.firstIntValue(await db.rawQuery('SELECT COUNT(*) FROM book_categories WHERE book_id = ?', [bookId]));
+      if (count == 0) {
+        await db.delete('books', where: 'id = ?', whereArgs: [bookId]);
+      }
+    }
   }
 } 

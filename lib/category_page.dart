@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'database_helper.dart';
 import 'category_books_page.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class CategoryPage extends StatefulWidget {
   const CategoryPage({super.key});
@@ -11,11 +12,36 @@ class CategoryPage extends StatefulWidget {
 
 class _CategoryPageState extends State<CategoryPage> {
   late Future<List<Category>> _categoriesFuture;
+  List<Category> _firestoreCategories = [];
 
   @override
   void initState() {
     super.initState();
-    _categoriesFuture = DatabaseHelper().getAllCategories();
+    _categoriesFuture = _loadAllCategories();
+  }
+
+  Future<List<Category>> _loadAllCategories() async {
+    // Fetch local categories
+    final localCategories = await DatabaseHelper().getAllCategories();
+    // Fetch Firestore categories
+    final snapshot = await FirebaseFirestore.instance.collection('categories').get();
+    _firestoreCategories = snapshot.docs.map((doc) {
+      final data = doc.data();
+      return Category(
+        id: data['id'] ?? doc.id.hashCode, // fallback to hash if no id
+        name: data['name'] ?? '',
+        description: data['description'],
+        bookCount: data['bookCount'],
+        createdAt: data['createdAt'] != null ? DateTime.tryParse(data['createdAt']) : null,
+      );
+    }).toList();
+    // Merge and deduplicate by name
+    final all = [...localCategories, ..._firestoreCategories];
+    final unique = <String, Category>{};
+    for (final cat in all) {
+      unique[cat.name.toLowerCase()] = cat;
+    }
+    return unique.values.toList();
   }
 
   @override
@@ -111,7 +137,7 @@ class _CategoryPageState extends State<CategoryPage> {
           return RefreshIndicator(
             onRefresh: () async {
               setState(() {
-                _categoriesFuture = DatabaseHelper().getAllCategories();
+                _categoriesFuture = _loadAllCategories();
               });
             },
             child: ListView.builder(
