@@ -505,6 +505,7 @@ class _BookDetailsPageState extends widgets.State<BookDetailsPage> with widgets.
       );
     }
 
+    // For EPUB and other books, show only one button: 'Read' if downloaded, 'Download' if not
     return widgets.Scaffold(
       backgroundColor: colorScheme.surface,
       appBar: widgets.AppBar(
@@ -641,29 +642,6 @@ class _BookDetailsPageState extends widgets.State<BookDetailsPage> with widgets.
                     style: widgets.OutlinedButton.styleFrom(
                       foregroundColor: colorScheme.primary,
                       side: widgets.BorderSide(color: colorScheme.primary),
-                      shape: widgets.RoundedRectangleBorder(borderRadius: widgets.BorderRadius.circular(8)),
-                      padding: const widgets.EdgeInsets.symmetric(vertical: 16),
-                    ),
-                    child: _downloading
-                        ? widgets.SizedBox(
-                            height: 18,
-                            width: 18,
-                            child: widgets.CircularProgressIndicator(
-                              value: _downloadProgress,
-                              strokeWidth: 2.5,
-                              color: colorScheme.onPrimary,
-                            ),
-                          )
-                        : widgets.Text(_isBookDownloaded ? 'Read' : 'Download', style: const widgets.TextStyle(fontSize: 16)),
-                  ),
-                ),
-                const widgets.SizedBox(width: 16),
-                widgets.Expanded(
-                  child: widgets.ElevatedButton(
-                    onPressed: _downloading ? null : (_isBookDownloaded ? _openBook : _downloadBook),
-                    style: widgets.ElevatedButton.styleFrom(
-                      backgroundColor: colorScheme.primary,
-                      foregroundColor: colorScheme.onPrimary,
                       shape: widgets.RoundedRectangleBorder(borderRadius: widgets.BorderRadius.circular(8)),
                       padding: const widgets.EdgeInsets.symmetric(vertical: 16),
                     ),
