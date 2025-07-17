@@ -6,6 +6,7 @@ import 'homepage.dart';
 import 'category_page.dart';
 import 'bottom_nav_provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/services.dart';
 
 class BottomNav extends StatefulWidget {
   const BottomNav({super.key});
@@ -67,7 +68,7 @@ class _BottomNavState extends State<BottomNav> {
             false;
             
         if (shouldExit && mounted) {
-          Navigator.of(context).maybePop();
+          SystemNavigator.pop();
         }
       },
       child: Scaffold(

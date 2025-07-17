@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'login_page.dart';
+import 'auth/login_page.dart';
 import 'package:provider/provider.dart';
 import 'bottom_nav.dart';
 import 'bottom_nav_provider.dart';
