@@ -165,11 +165,11 @@ class _HomePageState extends State<HomePage> {
         // Search Bar
         GestureDetector(
           onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const SearchPage()),
-            );
-          },
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SearchPage()),
+              );
+            },
           child: Container(
             decoration: BoxDecoration(
               color: theme.brightness == Brightness.light
@@ -223,34 +223,34 @@ class _HomePageState extends State<HomePage> {
 
 
   Widget _buildLoadingState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
           CircularProgressIndicator(
             strokeWidth: 3,
             color: Theme.of(context).colorScheme.primary,
           ),
-          const SizedBox(height: 16),
-          Text(
+                  const SizedBox(height: 16),
+                  Text(
             'Loading your library...',
             style: TextStyle(
               fontSize: 16,
               color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
+                  ),
+                ],
+              ),
+            );
+          }
+          
   Widget _buildErrorState(String error) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -274,7 +274,7 @@ class _HomePageState extends State<HomePage> {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
-            Text(
+                  Text(
               'Unable to load your books right now',
               style: TextStyle(
                 fontSize: 14,
@@ -354,10 +354,10 @@ class _HomePageState extends State<HomePage> {
             ),
           ],
         ),
-      ),
-    );
-  }
-
+              ),
+            );
+          }
+          
   Widget _buildBooksList(List<CategoryWithBooks> categories) {
     return CustomScrollView(
       slivers: [
@@ -396,9 +396,9 @@ class _HomePageState extends State<HomePage> {
                 onRecap: () {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Recap feature coming soon!')),
-                  );
-                },
-              ),
+          );
+        },
+      ),
             ),
           ),
         SliverPadding(
@@ -414,7 +414,7 @@ class _HomePageState extends State<HomePage> {
             (context, index) => ModernCategorySection(
               categoryWithBooks: categories[index],
               onBookTap: (book) {
-                Navigator.push(
+          Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (context) => BookDetailsPage(book: book),
@@ -444,8 +444,8 @@ class _HomePageState extends State<HomePage> {
       ),
       child: FloatingActionButton.extended(
         onPressed: () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const BookUploadFormPage()),
+            context,
+            MaterialPageRoute(builder: (context) => const BookUploadFormPage()),
         ).then((_) => _loadLastDownloadedBook()),
         icon: const Icon(Icons.add_rounded),
         label: const Text('Add Book'),
@@ -503,9 +503,9 @@ class ModernCategorySection extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 16),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -527,7 +527,7 @@ class ModernCategorySection extends StatelessWidget {
                       ),
                     );
                   },
-                  child: Text(
+          child: Text(
                     'View all',
                     style: TextStyle(
                       fontSize: 14,
@@ -539,22 +539,22 @@ class ModernCategorySection extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          SizedBox(
+        SizedBox(
             height: 280,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              itemCount: categoryWithBooks.books.length,
-              itemBuilder: (context, index) {
-                final book = categoryWithBooks.books[index];
-                return GestureDetector(
+            itemCount: categoryWithBooks.books.length,
+            itemBuilder: (context, index) {
+              final book = categoryWithBooks.books[index];
+              return GestureDetector(
                   onTap: () => onBookTap?.call(book),
                   child: ModernBookCard(book: book),
-                );
-              },
-            ),
+              );
+            },
           ),
-        ],
+        ),
+      ],
       ),
     );
   }
@@ -573,9 +573,9 @@ class ModernBookCard extends StatelessWidget {
     return Container(
       width: 140,
       margin: const EdgeInsets.symmetric(horizontal: 4),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
           // Book Cover
           Container(
             height: 200,
@@ -591,25 +591,25 @@ class ModernBookCard extends StatelessWidget {
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(12),
-              child: book.coverImageUrl != null && book.coverImageUrl!.isNotEmpty
-                  ? Image.network(
-                      book.coverImageUrl!,
-                      fit: BoxFit.cover,
+                child: book.coverImageUrl != null && book.coverImageUrl!.isNotEmpty
+                    ? Image.network(
+                        book.coverImageUrl!,
+                        fit: BoxFit.cover,
                       width: double.infinity,
                       errorBuilder: (context, error, stackTrace) => _buildPlaceholder(),
-                      loadingBuilder: (context, child, loadingProgress) {
-                        if (loadingProgress == null) return child;
-                        return Container(
+                        loadingBuilder: (context, child, loadingProgress) {
+                          if (loadingProgress == null) return child;
+                          return Container(
                           decoration: BoxDecoration(
                             color: Colors.grey[100],
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          child: const Center(
+                            child: const Center(
                             child: CircularProgressIndicator(strokeWidth: 2),
-                          ),
-                        );
-                      },
-                    )
+                            ),
+                          );
+                        },
+                      )
                   : _buildPlaceholder(),
             ),
           ),
@@ -658,10 +658,10 @@ class ModernBookCard extends StatelessWidget {
       child: const Center(
         child: Icon(
           Icons.auto_stories_rounded,
-          size: 48,
-          color: Colors.grey,
-        ),
-      ),
+                          size: 48,
+                          color: Colors.grey,
+                        ),
+                      ),
     );
   }
 }
@@ -728,16 +728,16 @@ class _LastDownloadedBookCard extends StatelessWidget {
                 : _buildPlaceholder(),
           ),
           const SizedBox(width: 18),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
+            Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
                   downloaded.title,
                   style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                 if (book != null && book!.authorName != null && book!.authorName!.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.only(top: 2.0),
@@ -824,7 +824,7 @@ class _LastDownloadedBookCard extends StatelessWidget {
       ),
     );
   }
-}
+} 
 
 class DownloadedBook {
   final String title;

@@ -44,7 +44,7 @@ class _LoginPageState extends State<LoginPage> {
   //   }
   // }
     // Updated login method for your LoginPage
-Future<void> _login() async {
+  Future<void> _login() async {
   // Prevent multiple login attempts
   if (_loading) {
     return;
@@ -65,10 +65,10 @@ Future<void> _login() async {
     return;
   }
   
-  setState(() {
-    _loading = true;
-    _error = null;
-  });
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
   
   final email = _emailController.text.trim();
   final password = _passwordController.text.trim();
@@ -137,8 +137,8 @@ Future<void> _login() async {
   } catch (e) {
     setState(() {
       _error = 'An unexpected error occurred. Please try again.';
-    });
-  } finally {
+      });
+    } finally {
     if (mounted) {
       setState(() {
         _loading = false;
@@ -253,9 +253,9 @@ Future<void> _testFirebaseConnection() async {
                   child: Padding(
                     padding: const EdgeInsets.all(32),
                     child: SingleChildScrollView(
-                      child: Column(
+        child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
+          children: [
                           // Welcome Back Title
                           const Text(
                             'Welcome Back',
@@ -285,9 +285,9 @@ Future<void> _testFirebaseConnection() async {
                             ),
                           ),
                           const SizedBox(height: 8),
-                          TextField(
-                            controller: _emailController,
-                            keyboardType: TextInputType.emailAddress,
+            TextField(
+              controller: _emailController,
+              keyboardType: TextInputType.emailAddress,
                             decoration: InputDecoration(
                               hintText: 'Enter your email',
                               hintStyle: TextStyle(
@@ -332,8 +332,8 @@ Future<void> _testFirebaseConnection() async {
                             ),
                           ),
                           const SizedBox(height: 8),
-                          TextField(
-                            controller: _passwordController,
+            TextField(
+              controller: _passwordController,
                             obscureText: _obscurePassword,
                             decoration: InputDecoration(
                               hintText: '••••••••••••',
@@ -496,7 +496,7 @@ Future<void> _testFirebaseConnection() async {
                             ],
                           ),
                           
-                          const SizedBox(height: 24),
+            const SizedBox(height: 24),
                           
                           // Social Sign In Buttons
                           Row(
@@ -617,4 +617,4 @@ Future<void> _testFirebaseConnection() async {
     _passwordController.dispose();
     super.dispose();
   }
-}
+} 
