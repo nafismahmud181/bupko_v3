@@ -41,6 +41,7 @@ class _CategoryBooksPageState extends State<CategoryBooksPage> {
         epubDownloadUrl: data['epubDownloadUrl'],
         pdfDownloadUrl: data['pdfDownloadUrl'],
         txtDownloadUrl: data['txtDownloadUrl'],
+        fileType: data['fileType'],
       );
     }).toList();
     // Mirror Firestore: delete local books not in Firestore

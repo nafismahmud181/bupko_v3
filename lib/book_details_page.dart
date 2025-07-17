@@ -8,6 +8,9 @@ import 'dart:convert';
 import 'epub_reader_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'pdf_reader_page.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 
 class BookDetailsPage extends widgets.StatefulWidget {
   final Book book;
@@ -293,7 +296,215 @@ class _BookDetailsPageState extends widgets.State<BookDetailsPage> with widgets.
     final book = widget.book;
     final theme = widgets.Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final isPdf = (book.fileType?.toUpperCase() == 'PDF') && book.pdfDownloadUrl != null && book.pdfDownloadUrl!.isNotEmpty;
     
+    if (isPdf) {
+      return widgets.Scaffold(
+        backgroundColor: colorScheme.surface,
+        appBar: widgets.AppBar(
+          backgroundColor: widgets.Colors.transparent,
+          elevation: 0,
+          leading: widgets.IconButton(
+            icon: widgets.Icon(widgets.Icons.arrow_back, color: colorScheme.onSurface),
+            onPressed: () => widgets.Navigator.of(context).pop(),
+          ),
+          actions: [
+            widgets.IconButton(
+              icon: widgets.Icon(widgets.Icons.bookmark_border, color: colorScheme.onSurface),
+              onPressed: () {},
+            ),
+          ],
+          iconTheme: widgets.IconThemeData(color: colorScheme.onSurface),
+        ),
+        body: widgets.Padding(
+          padding: const widgets.EdgeInsets.symmetric(horizontal: 24.0),
+          child: widgets.Column(
+            crossAxisAlignment: widgets.CrossAxisAlignment.stretch,
+            children: [
+              // Book Cover
+              widgets.Center(
+                child: widgets.ClipRRect(
+                  borderRadius: widgets.BorderRadius.circular(12),
+                  child: book.coverImageUrl != null && book.coverImageUrl!.isNotEmpty
+                      ? widgets.Image.network(
+                          book.coverImageUrl!,
+                          width: 180,
+                          height: 240,
+                          fit: widgets.BoxFit.cover,
+                        )
+                      : widgets.Container(
+                          width: 180,
+                          height: 240,
+                          color: colorScheme.surfaceContainerHighest,
+                          child: widgets.Icon(widgets.Icons.book, size: 64, color: colorScheme.outline),
+                        ),
+                ),
+              ),
+              const widgets.SizedBox(height: 24),
+              // Book Title
+              widgets.Text(
+                book.title,
+                style: theme.textTheme.titleLarge?.copyWith(fontWeight: widgets.FontWeight.bold),
+                textAlign: widgets.TextAlign.center,
+              ),
+              if (book.authorName != null && book.authorName!.isNotEmpty) ...[
+                const widgets.SizedBox(height: 6),
+                widgets.Text(
+                  book.authorName!,
+                  style: theme.textTheme.bodyMedium?.copyWith(color: colorScheme.onSurface.withValues(alpha:0.7), fontWeight: widgets.FontWeight.w500),
+                  textAlign: widgets.TextAlign.center,
+                ),
+              ],
+              const widgets.SizedBox(height: 16),
+              // Book Info Row
+              widgets.Row(
+                mainAxisAlignment: widgets.MainAxisAlignment.center,
+                children: [
+                  _VerticalDivider(),
+                  _InfoColumn(label: 'Rating', value: book.rating != null ? '${book.rating!.toStringAsFixed(1)}/5' : '4.9/5'),
+                  _VerticalDivider(),
+                  _InfoColumn(label: 'Read', value: '5.3k'),
+                  _VerticalDivider(),
+                  _InfoColumn(label: 'Pages', value: book.pages?.toString() ?? '-'),
+                ],
+              ),
+              const widgets.SizedBox(height: 24),
+              // Tabs
+              widgets.Container(
+                padding: const widgets.EdgeInsets.symmetric(vertical: 6, horizontal: 2),
+                decoration: widgets.BoxDecoration(
+                  color: theme.cardColor,
+                  borderRadius: widgets.BorderRadius.circular(12),
+                  boxShadow: [
+                    widgets.BoxShadow(
+                      color: widgets.Colors.black.withValues(alpha:0.03),
+                      blurRadius: 4,
+                      offset: const widgets.Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: widgets.TabBar(
+                  controller: _tabController,
+                  labelColor: colorScheme.onPrimary,
+                  unselectedLabelColor: colorScheme.primary,
+                  indicator: widgets.BoxDecoration(
+                    color: colorScheme.primary,
+                    borderRadius: widgets.BorderRadius.circular(8),
+                  ),
+                  dividerColor: widgets.Colors.transparent,
+                  indicatorSize: widgets.TabBarIndicatorSize.tab,
+                  overlayColor: widgets.WidgetStateProperty.all(widgets.Colors.transparent),
+                  tabs: const [
+                    widgets.Tab(child: widgets.Align(alignment: widgets.Alignment.center, child: widgets.Text('Description'))),
+                    widgets.Tab(child: widgets.Align(alignment: widgets.Alignment.center, child: widgets.Text('Reviews'))),
+                    widgets.Tab(child: widgets.Align(alignment: widgets.Alignment.center, child: widgets.Text('Instruction'))),
+                  ],
+                ),
+              ),
+              widgets.Divider(height: 18, thickness: 1, color: colorScheme.outline.withValues(alpha:0.08)),
+              // Tab Content
+              widgets.Expanded(
+                child: widgets.Container(
+                  decoration: widgets.BoxDecoration(
+                    color: theme.cardColor,
+                    borderRadius: widgets.BorderRadius.circular(12),
+                  ),
+                  child: widgets.TabBarView(
+                    controller: _tabController,
+                    children: [
+                      widgets.Padding(
+                        padding: const widgets.EdgeInsets.all(16.0),
+                        child: widgets.Text(
+                          book.description ?? 'No description available.',
+                          style: theme.textTheme.bodyMedium,
+                        ),
+                      ),
+                      const widgets.Center(child: widgets.Text('No reviews yet.')),
+                      const widgets.Center(child: widgets.Text('No instructions available.')),
+                    ],
+                  ),
+                ),
+              ),
+              const widgets.SizedBox(height: 18),
+              // Buttons
+              widgets.Row(
+                children: [
+                  widgets.Expanded(
+                    child: widgets.OutlinedButton(
+                      onPressed: () {
+                        debugPrint('DEBUG: Read Sample button pressed for PDF book: ${book.title}');
+                        debugPrint('DEBUG: PDF URL: ${book.pdfDownloadUrl}');
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => PdfReaderPage(
+                              pdfUrl: book.pdfDownloadUrl!,
+                              bookTitle: book.title,
+                            ),
+                          ),
+                        );
+                      },
+                      style: widgets.OutlinedButton.styleFrom(
+                        foregroundColor: colorScheme.primary,
+                        side: widgets.BorderSide(color: colorScheme.primary),
+                        shape: widgets.RoundedRectangleBorder(borderRadius: widgets.BorderRadius.circular(8)),
+                        padding: const widgets.EdgeInsets.symmetric(vertical: 16),
+                      ),
+                      child: const widgets.Text('Read Sample', style: widgets.TextStyle(fontSize: 16)),
+                    ),
+                  ),
+                  const widgets.SizedBox(width: 16),
+                  widgets.Expanded(
+                    child: widgets.ElevatedButton(
+                      onPressed: _downloading ? null : (_isBookDownloaded ? _openBook : _downloadBook),
+                      style: widgets.ElevatedButton.styleFrom(
+                        backgroundColor: colorScheme.primary,
+                        foregroundColor: colorScheme.onPrimary,
+                        shape: widgets.RoundedRectangleBorder(borderRadius: widgets.BorderRadius.circular(8)),
+                        padding: const widgets.EdgeInsets.symmetric(vertical: 16),
+                      ),
+                      child: _downloading
+                          ? widgets.SizedBox(
+                              height: 18,
+                              width: 18,
+                              child: widgets.CircularProgressIndicator(
+                                value: _downloadProgress,
+                                strokeWidth: 2.5,
+                                color: colorScheme.onPrimary,
+                              ),
+                            )
+                          : widgets.Text(_isBookDownloaded ? 'Read' : 'Download', style: const widgets.TextStyle(fontSize: 16)),
+                    ),
+                  ),
+                ],
+              ),
+              if (_downloading) ...[
+                const widgets.SizedBox(height: 12),
+                widgets.LinearProgressIndicator(
+                  value: _downloadProgress > 0 ? _downloadProgress : null,
+                  minHeight: 6,
+                  backgroundColor: colorScheme.surfaceContainerHighest,
+                  valueColor: widgets.AlwaysStoppedAnimation<widgets.Color>(colorScheme.primary),
+                ),
+                const widgets.SizedBox(height: 8),
+                widgets.TextButton.icon(
+                  onPressed: () {
+                    _cancelToken?.cancel('Download cancelled by user.');
+                    setState(() {
+                      _downloading = false;
+                    });
+                  },
+                  icon: const widgets.Icon(widgets.Icons.cancel, color: widgets.Colors.red),
+                  label: const widgets.Text('Cancel Download', style: widgets.TextStyle(color: widgets.Colors.red)),
+                ),
+              ],
+              const widgets.SizedBox(height: 18),
+            ],
+          ),
+        ),
+      );
+    }
+
     return widgets.Scaffold(
       backgroundColor: colorScheme.surface,
       appBar: widgets.AppBar(
@@ -426,14 +637,24 @@ class _BookDetailsPageState extends widgets.State<BookDetailsPage> with widgets.
               children: [
                 widgets.Expanded(
                   child: widgets.OutlinedButton(
-                    onPressed: () {},
+                    onPressed: _downloading ? null : (_isBookDownloaded ? _openBook : _downloadBook),
                     style: widgets.OutlinedButton.styleFrom(
                       foregroundColor: colorScheme.primary,
                       side: widgets.BorderSide(color: colorScheme.primary),
                       shape: widgets.RoundedRectangleBorder(borderRadius: widgets.BorderRadius.circular(8)),
                       padding: const widgets.EdgeInsets.symmetric(vertical: 16),
                     ),
-                    child: const widgets.Text('Read Sample', style: widgets.TextStyle(fontSize: 16)),
+                    child: _downloading
+                        ? widgets.SizedBox(
+                            height: 18,
+                            width: 18,
+                            child: widgets.CircularProgressIndicator(
+                              value: _downloadProgress,
+                              strokeWidth: 2.5,
+                              color: colorScheme.onPrimary,
+                            ),
+                          )
+                        : widgets.Text(_isBookDownloaded ? 'Read' : 'Download', style: const widgets.TextStyle(fontSize: 16)),
                   ),
                 ),
                 const widgets.SizedBox(width: 16),

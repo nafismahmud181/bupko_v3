@@ -31,6 +31,7 @@ class Book {
   final String? epubDownloadUrl;
   final String? pdfDownloadUrl;
   final String? txtDownloadUrl;
+  final String? fileType;
   final double? epubSizeMb;
   final double? pdfSizeMb;
   final double? txtSizeMb;
@@ -64,6 +65,7 @@ class Book {
     this.epubDownloadUrl,
     this.pdfDownloadUrl,
     this.txtDownloadUrl,
+    this.fileType,
     this.epubSizeMb,
     this.pdfSizeMb,
     this.txtSizeMb,
@@ -99,6 +101,7 @@ class Book {
       epubDownloadUrl: map['epub_download_url'],
       pdfDownloadUrl: map['pdf_download_url'],
       txtDownloadUrl: map['txt_download_url'],
+      fileType: map['file_type'],
       epubSizeMb: map['epub_size_mb'] != null ? (map['epub_size_mb'] as num).toDouble() : null,
       pdfSizeMb: map['pdf_size_mb'] != null ? (map['pdf_size_mb'] as num).toDouble() : null,
       txtSizeMb: map['txt_size_mb'] != null ? (map['txt_size_mb'] as num).toDouble() : null,
@@ -255,6 +258,7 @@ class DatabaseHelper {
         'epub_download_url': book.epubDownloadUrl,
         'pdf_download_url': book.pdfDownloadUrl,
         'txt_download_url': book.txtDownloadUrl,
+        'file_type': book.fileType,
         // Add other fields as needed
       },
       conflictAlgorithm: ConflictAlgorithm.ignore,
