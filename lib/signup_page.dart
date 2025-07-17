@@ -438,7 +438,7 @@ class _SignupPageState extends State<SignupPage> {
                                   ),
                                   child: TextButton(
                                     onPressed: () {
-                                      // Handle Facebook sign up
+                                      // Handle Google sign up
                                     },
                                     style: TextButton.styleFrom(
                                       shape: RoundedRectangleBorder(
@@ -448,18 +448,10 @@ class _SignupPageState extends State<SignupPage> {
                                     child: Row(
                                       mainAxisAlignment: MainAxisAlignment.center,
                                       children: [
-                                        Container(
+                                        Image.asset(
+                                          'assets/logo/facebook.png', // You'll need to add this asset
                                           height: 20,
                                           width: 20,
-                                          decoration: const BoxDecoration(
-                                            color: Color(0xFF1877F2),
-                                            shape: BoxShape.circle,
-                                          ),
-                                          child: const Icon(
-                                            Icons.facebook,
-                                            color: Colors.white,
-                                            size: 16,
-                                          ),
                                         ),
                                         const SizedBox(width: 8),
                                         Text(
