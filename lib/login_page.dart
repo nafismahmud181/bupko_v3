@@ -229,7 +229,7 @@ Future<void> _testFirebaseConnection() async {
               
               // Jobsly Title
               const Text(
-                'Jobsly',
+                'BUPKO',
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 32,
@@ -522,7 +522,7 @@ Future<void> _testFirebaseConnection() async {
                                       mainAxisAlignment: MainAxisAlignment.center,
                                       children: [
                                         Image.asset(
-                                          'assets/images/google_logo.png', // Add Google logo asset
+                                          'assets/logo/google.png', // Add Google logo asset
                                           height: 20,
                                           width: 20,
                                           errorBuilder: (context, error, stackTrace) {
@@ -570,7 +570,7 @@ Future<void> _testFirebaseConnection() async {
                                       mainAxisAlignment: MainAxisAlignment.center,
                                       children: [
                                         Image.asset(
-                                          'assets/images/facebook_logo.png', // Add Facebook logo asset
+                                          'assets/logo/facebook.png', // Add Facebook logo asset
                                           height: 20,
                                           width: 20,
                                           errorBuilder: (context, error, stackTrace) {
