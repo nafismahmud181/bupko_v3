@@ -16,34 +16,7 @@ class _LoginPageState extends State<LoginPage> {
   bool _obscurePassword = true;
   String? _error;
 
-  @override
-  void initState() {
-    super.initState();
-    // Pre-fill email as shown in the image
-    _emailController.text = 'nicholas@ergemia.com';
-  }
-
-  // Future<void> _login() async {
-  //   setState(() {
-  //     _loading = true;
-  //     _error = null;
-  //   });
-  //   try {
-  //     await FirebaseAuth.instance.signInWithEmailAndPassword(
-  //       email: _emailController.text.trim(),
-  //       password: _passwordController.text.trim(),
-  //     );
-  //   } on FirebaseAuthException catch (e) {
-  //     setState(() {
-  //       _error = e.message;
-  //     });
-  //   } finally {
-  //     setState(() {
-  //       _loading = false;
-  //     });
-  //   }
-  // }
-    // Updated login method for your LoginPage
+  // Updated login method for your LoginPage
   Future<void> _login() async {
   // Prevent multiple login attempts
   if (_loading) {
@@ -289,7 +262,7 @@ Future<void> _testFirebaseConnection() async {
               controller: _emailController,
               keyboardType: TextInputType.emailAddress,
                             decoration: InputDecoration(
-                              hintText: 'Enter your email',
+                              hintText: 'Please enter your email',
                               hintStyle: TextStyle(
                                 color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.4),
                               ),
@@ -336,7 +309,7 @@ Future<void> _testFirebaseConnection() async {
               controller: _passwordController,
                             obscureText: _obscurePassword,
                             decoration: InputDecoration(
-                              hintText: '••••••••••••',
+                              hintText: 'Please enter your password',
                               hintStyle: TextStyle(
                                 color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.4),
                               ),
@@ -617,4 +590,4 @@ Future<void> _testFirebaseConnection() async {
     _passwordController.dispose();
     super.dispose();
   }
-} 
+}
